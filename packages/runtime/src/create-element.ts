@@ -1,12 +1,12 @@
 import { withoutNulls } from "./utils/arrays";
 
 export const DOM_TYPES = {
-  TEXT: "text",
-  ELEMENT: "element",
-  FRAGMENT: "fragment",
+  LISTEN_TEXT_TYPE: "text",
+  LISTEN_ELEMENT_TYPE: "element",
+  LISTEN_FRAGMENT_TYPE: "fragment",
 } as const;
 
-interface VNode<T extends Tag = Tag> {
+interface ListenElement<T extends Tag = Tag> {
   tag?: T;
   props?: Props<T>;
   children?: Children;
@@ -18,18 +18,20 @@ type Tag = keyof HTMLElementTagNameMap;
 type Props<T extends Tag> = Partial<HTMLElementTagNameMap[T]> &
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, any>;
-type Children = Array<string | VNode<keyof HTMLElementTagNameMap> | null>;
+type Children = Array<
+  string | ListenElement<keyof HTMLElementTagNameMap> | null
+>;
 
 function createElement<T extends Tag>(
   tag: T,
   props: Props<T> = {},
   children: Children = []
-): VNode<T> {
+): ListenElement<T> {
   return {
+    type: DOM_TYPES.LISTEN_ELEMENT_TYPE,
     tag,
     props,
     children: mapTextNodes(withoutNulls(children)),
-    type: DOM_TYPES.ELEMENT,
   };
 }
 
@@ -39,11 +41,24 @@ function mapTextNodes(children: Children): Children {
   );
 }
 
-function createTextElement(text: string): VNode {
+function createTextElement(text: string): ListenElement {
   return {
-    type: DOM_TYPES.TEXT,
+    type: DOM_TYPES.LISTEN_TEXT_TYPE,
     value: text,
   };
 }
 
-export { createElement, type VNode, type Tag, type Props, type Children };
+function createFragment(children: Children): ListenElement {
+  return {
+    type: DOM_TYPES.LISTEN_FRAGMENT_TYPE,
+    children: mapTextNodes(withoutNulls(children)),
+  };
+}
+
+export {
+  createElement,
+  type ListenElement,
+  type Tag,
+  type Props,
+  type Children,
+};
