@@ -25,7 +25,7 @@ function createTextInstance(fiber, parentInstance) {
 
 function createFragmentInstance(fiber, parentInstance) {
   const { children } = fiber;
-  fiber.el = parentInstance;
+  fiber.stateNode = parentInstance;
 
   children.forEach((child) => {
     mountHostComponent(child, parentInstance);
@@ -35,19 +35,19 @@ function createFragmentInstance(fiber, parentInstance) {
 function createInstance(fiber, parentInstance) {
   const { tag, props, children } = fiber;
 
-  const element = document.createElement(tag);
-  addPropsToElement(element, props);
-  fiber.el = element;
+  const domElement = document.createElement(tag);
+  setInitialProperties(domElement, props);
+  fiber.stateNode = domElement;
 
   children.forEach((child) => {
-    mountHostComponent(child, element);
+    mountHostComponent(child, domElement);
   });
-  parentInstance.appendChild(element);
+  parentInstance.appendChild(domElement);
 }
 
-function addPropsToElement(element, props, fiber) {
+function setInitialProperties(domElement, props, fiber) {
   const { on: events, ...attrs } = props;
 
-  fiber.listeners = addEventListeners(events, element);
-  setAttributesToElement(element, attrs);
+  fiber.listeners = addEventListeners(events, domElement);
+  setProp(domElement, attrs);
 }
