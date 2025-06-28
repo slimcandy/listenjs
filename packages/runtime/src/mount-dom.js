@@ -1,53 +1,53 @@
 import { DOM_TYPES } from "./create-element";
 
-function mountDom(vdom, parentElement) {
-  switch (vdom.type) {
+function mountHostComponent(fiber, parentInstance) {
+  switch (fiber.type) {
     case DOM_TYPES.LISTEN_TEXT_TYPE:
-      createTextNode(vdom, parentElement);
+      createTextInstance(fiber, parentInstance);
       break;
     case DOM_TYPES.LISTEN_ELEMENT_TYPE:
-      createElementNode(vdom, parentElement);
+      createInstance(fiber, parentInstance);
       break;
     case DOM_TYPES.LISTEN_FRAGMENT_TYPE:
-      createFragmentNodes(vdom, parentElement);
+      createFragmentInstance(fiber, parentInstance);
       break;
     default:
-      throw new Error(`Unknown vdom type: ${vdom.type}`);
+      throw new Error(`Unknown fiber type: ${fiber.type}`);
   }
 }
 
-function createTextNode(vdom, parentElement) {
-  const { value } = vdom;
+function createTextInstance(fiber, parentInstance) {
+  const { value } = fiber;
   const textNode = document.createTextNode(value);
 
-  parentElement.appendChild(textNode);
+  parentInstance.appendChild(textNode);
 }
 
-function createFragmentNodes(vdom, parentElement) {
-  const { children } = vdom;
-  vdom.el = parentElement;
+function createFragmentInstance(fiber, parentInstance) {
+  const { children } = fiber;
+  fiber.el = parentInstance;
 
   children.forEach((child) => {
-    mountDom(child, parentElement);
+    mountHostComponent(child, parentInstance);
   });
 }
 
-function createElementNode(vdom, parentElement) {
-  const { tag, props, children } = vdom;
+function createInstance(fiber, parentInstance) {
+  const { tag, props, children } = fiber;
 
   const element = document.createElement(tag);
   addPropsToElement(element, props);
-  vdom.el = element;
+  fiber.el = element;
 
   children.forEach((child) => {
-    mountDom(child, element);
+    mountHostComponent(child, element);
   });
-  parentElement.appendChild(element);
+  parentInstance.appendChild(element);
 }
 
-function addPropsToElement(element, props, vdom) {
+function addPropsToElement(element, props, fiber) {
   const { on: events, ...attrs } = props;
 
-  vdom.listeners = addEventListeners(events, element);
+  fiber.listeners = addEventListeners(events, element);
   setAttributesToElement(element, attrs);
 }
