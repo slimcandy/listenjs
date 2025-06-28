@@ -1,6 +1,12 @@
 import { DOM_TYPES } from "./create-element";
+import { attachEventListeners } from "./events";
+import { setProp } from "./set-prop";
 
 function mountHostComponent(fiber, parentInstance) {
+  if (parentInstance == undefined) {
+    throw new Error("Parent element is not defined", parentInstance);
+  }
+
   switch (fiber.type) {
     case DOM_TYPES.LISTEN_TEXT_TYPE:
       createTextInstance(fiber, parentInstance);
@@ -48,6 +54,10 @@ function createInstance(fiber, parentInstance) {
 function setInitialProperties(domElement, props, fiber) {
   const { on: events, ...attrs } = props;
 
-  fiber.listeners = addEventListeners(events, domElement);
+  if (events) {
+    fiber.listeners = attachEventListeners(events, domElement);
+  }
   setProp(domElement, attrs);
 }
+
+export { mountHostComponent };

@@ -1,5 +1,6 @@
 import cleanup from "rollup-plugin-cleanup";
 import filesize from "rollup-plugin-filesize";
+import terser from "@rollup/plugin-terser";
 
 export default {
   input: "src/index.js",
@@ -8,7 +9,7 @@ export default {
     {
       file: "dist/listenjs.js",
       format: "esm",
-      plugins: [filesize()],
+      plugins: [terser(), filesize()],
     },
   ],
 };

@@ -50,3 +50,5 @@ function removeValueForAttribute(domElement, key) {
   domElement[key] = null;
   domElement.removeAttribute(key);
 }
+
+export { setProp };
