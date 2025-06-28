@@ -15,4 +15,10 @@ function attachEventListeners(listeners = {}, domElement) {
   return attachedListeners;
 }
 
-export { attachEventListener, attachEventListeners };
+function removeEventListeners(listeners = {}, domElement) {
+  Object.entries(listeners).forEach(([eventType, handler]) => {
+    domElement.removeEventListener(eventType, handler);
+  });
+}
+
+export { attachEventListener, attachEventListeners, removeEventListeners };

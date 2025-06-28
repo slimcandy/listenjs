@@ -9,6 +9,7 @@ export default {
     {
       file: "dist/listenjs.js",
       format: "esm",
+      sourcemap: true,
       plugins: [terser(), filesize()],
     },
   ],
