@@ -1,28 +1,36 @@
-import { DOM_TYPES } from "./create-element";
 import { attachEventListeners } from "./events";
 import { setProp } from "./set-prop";
+import {
+  DOMType,
+  ElementFiber,
+  Fiber,
+  FragmentFiber,
+  Props,
+  TextFiber,
+} from "./types";
 
-function mountHostComponent(fiber, parentInstance) {
+function mountHostComponent(fiber: Fiber, parentInstance: Node) {
   if (parentInstance == undefined) {
-    throw new Error("Parent element is not defined", parentInstance);
+    throw new Error(`
+      "Parent element is not defined: ${parentInstance}`);
   }
 
   switch (fiber.type) {
-    case DOM_TYPES.LISTEN_TEXT_TYPE:
+    case DOMType.TEXT:
       createTextInstance(fiber, parentInstance);
       break;
-    case DOM_TYPES.LISTEN_ELEMENT_TYPE:
+    case DOMType.ELEMENT:
       createInstance(fiber, parentInstance);
       break;
-    case DOM_TYPES.LISTEN_FRAGMENT_TYPE:
+    case DOMType.FRAGMENT:
       createFragmentInstance(fiber, parentInstance);
       break;
     default:
-      throw new Error(`Unknown fiber type: ${fiber.type}`);
+      throw new Error(`Unknown fiber type`);
   }
 }
 
-function createTextInstance(fiber, parentInstance) {
+function createTextInstance(fiber: TextFiber, parentInstance: Node) {
   const { value } = fiber;
   const domTextNode = document.createTextNode(value);
   fiber.domElement = domTextNode;
@@ -30,7 +38,7 @@ function createTextInstance(fiber, parentInstance) {
   parentInstance.appendChild(domTextNode);
 }
 
-function createFragmentInstance(fiber, parentInstance) {
+function createFragmentInstance(fiber: FragmentFiber, parentInstance: Node) {
   const { children } = fiber;
   fiber.domElement = parentInstance;
 
@@ -39,11 +47,11 @@ function createFragmentInstance(fiber, parentInstance) {
   });
 }
 
-function createInstance(fiber, parentInstance) {
+function createInstance(fiber: ElementFiber, parentInstance: Node) {
   const { tag, props, children } = fiber;
 
   const domElement = document.createElement(tag);
-  setInitialProperties(domElement, props);
+  setInitialProperties(domElement, props, fiber);
   fiber.domElement = domElement;
 
   children.forEach((child) => {
@@ -52,7 +60,11 @@ function createInstance(fiber, parentInstance) {
   parentInstance.appendChild(domElement);
 }
 
-function setInitialProperties(domElement, props, fiber) {
+function setInitialProperties(
+  domElement: HTMLElement,
+  props: Props,
+  fiber: ElementFiber
+) {
   const { on: events, ...attrs } = props;
 
   if (events) {

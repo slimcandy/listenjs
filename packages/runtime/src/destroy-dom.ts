@@ -1,19 +1,25 @@
-import { DOM_TYPES } from "./create-element";
 import { removeEventListeners } from "./events";
+import {
+  DOMType,
+  ElementFiber,
+  Fiber,
+  FragmentFiber,
+  TextFiber,
+} from "./types";
 
-function destroyDOM(fiber) {
+function destroyDOM(fiber: Fiber) {
   const { type } = fiber;
 
   switch (type) {
-    case DOM_TYPES.LISTEN_TEXT_TYPE: {
+    case DOMType.TEXT: {
       removeTextNode(fiber);
       break;
     }
-    case DOM_TYPES.LISTEN_ELEMENT_TYPE: {
+    case DOMType.ELEMENT: {
       removeElementNode(fiber);
       break;
     }
-    case DOM_TYPES.LISTEN_FRAGMENT_TYPE: {
+    case DOMType.FRAGMENT: {
       removeFragmentNodes(fiber);
       break;
     }
@@ -26,13 +32,17 @@ function destroyDOM(fiber) {
   delete fiber.domElement;
 }
 
-function removeTextNode(fiber) {
+function removeTextNode(fiber: TextFiber) {
   const { domElement } = fiber;
-  domElement.remove();
+  if (domElement) {
+    domElement.remove();
+  }
 }
 
-function removeElementNode(fiber) {
+function removeElementNode(fiber: ElementFiber) {
   const { domElement, children, listeners } = fiber;
+
+  if (!domElement) return;
 
   domElement.remove();
   children.forEach(destroyDOM);
@@ -43,7 +53,7 @@ function removeElementNode(fiber) {
   }
 }
 
-function removeFragmentNodes(fiber) {
+function removeFragmentNodes(fiber: FragmentFiber) {
   const { children } = fiber;
   children.forEach(destroyDOM);
 }
