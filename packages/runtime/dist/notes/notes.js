@@ -1,4 +1,4 @@
-import { notes } from "./note-db.js";
+import { notes } from "../../../../examples/notes/note-db.js";
 
 /**
  * Constants
