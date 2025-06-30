@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Приложение заметок</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Мои заметки</h1>
+
+      <form action="#" id="form">
+        <fieldset role="group">
+          <input
+            autofocus
+            name="note-input"
+            id="note-input"
+            placeholder="Введите текст..."
+          />
+          <button type="submit" id="note-submit" disabled>Сохранить</button>
+        </fieldset>
+      </form>
+
+      <hr />
+
+      <div id="note-list"></div>
+    </main>
+
+    <template>
+      <div>
+        <details name="note">
+          <summary></summary>
+
+          <form action="#">
+            <fieldset role="group">
+              <input name="note-input" placeholder="Введите текст..." />
+              <button type="submit" class="secondary">Изменить</button>
+            </fieldset>
+          </form>
+        </details>
+        <hr />
+      </div>
+    </template>
+
+    <script type="module" src="./notes.js"></script>
+  </body>
+</html>
