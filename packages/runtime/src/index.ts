@@ -1,28 +1,32 @@
+import { createApp } from "./app";
 import { createElement } from "./create-element";
-import { mountHostComponent } from "./mount-host-component";
-import { destroyDOM } from "./destroy-dom";
 
-const fiber = createElement("section", {}, [
-  createElement("h1", {}, ["My blog"]),
-  createElement("p", {}, ["Welcome to my blog"]),
-]);
+const state = {
+  state: 0,
+  reducers: {
+    add: (state, payload) => state + payload,
+  },
+  view: (state, emit) =>
+    createElement(
+      "button",
+      {
+        on: {
+          click: () => emit("add", 1),
+        },
+      },
+      [createElement("p", {}, [`You clicked ${state} times.`])]
+    ),
+};
 
 function main() {
   const root = document.getElementById("root");
-  const removeButton = document.getElementById("remove");
 
   if (root == null) {
     throw new Error("Cannot find root");
   }
-  if (removeButton == null) {
-    throw new Error("Cannot find button to destroy DOM");
-  }
 
-  mountHostComponent(fiber, root);
-
-  removeButton.addEventListener("click", function removeListenJS() {
-    destroyDOM(fiber);
-  });
+  const { mount } = createApp(state);
+  mount(root);
 }
 
 document.addEventListener("DOMContentLoaded", main);

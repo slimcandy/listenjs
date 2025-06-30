@@ -3,7 +3,7 @@ import { Dispatcher } from "./dispatcher";
 import { mountHostComponent } from "./mount-host-component";
 import { Fiber } from "./types";
 
-function createApp({ state, view }) {
+function createApp({ state, view, reducers = {} }) {
   let parentInstance: Node | null = null;
   let fiber: Fiber | null = null;
 
@@ -28,7 +28,7 @@ function createApp({ state, view }) {
       destroyDOM(fiber);
     }
 
-    fiber = view(state);
+    fiber = view(state, emit);
     if (fiber && parentInstance) {
       mountHostComponent(fiber, parentInstance);
     }
