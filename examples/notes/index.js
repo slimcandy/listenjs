@@ -4,6 +4,7 @@ import {
 } from "../../packages/runtime/dist/listenjs.js";
 
 import { notes } from "../../../../examples/notes/note-db.js";
+import { EditForm, MainForm } from "./form.js";
 
 const appConfig = {
   state: notes,
@@ -26,58 +27,14 @@ function App(notes, emit) {
   return createElement("main", { className: "container" }, [
     createElement("h1", {}, ["Мои заметки"]),
 
-    createElement("form", { action: "#", id: "form" }, [
-      createElement("fieldset", { role: "group" }, [
-        createElement("input", {
-          autofocus: true,
-          name: "note-input",
-          id: "note-input",
-          placeholder: "Введите текст...",
-        }),
-        createElement(
-          "button",
-          {
-            type: "submit",
-            id: "note-submit",
-            disabled: true,
-          },
-          ["Сохранить"]
-        ),
-      ]),
-    ]),
+    MainForm({ emit }),
 
     createElement("hr"),
 
     createElement(
       "div",
       { id: "note-list" },
-      notes.map((note, index) =>
-        createElement("div", {}, [
-          createElement("details", { name: "note" }, [
-            createElement("summary", {}, [note.slice(0, 70) + "…"]),
-
-            createElement("form", { action: "#" }, [
-              createElement("fieldset", { role: "group" }, [
-                createElement("input", {
-                  name: `note-input__${index}`,
-                  placeholder: "Введите текст...",
-                  value: note,
-                }),
-                createElement(
-                  "button",
-                  {
-                    type: "submit",
-                    className: "secondary",
-                  },
-                  ["Изменить"]
-                ),
-              ]),
-            ]),
-          ]),
-
-          createElement("hr"),
-        ])
-      )
+      notes.map((note) => EditForm({ inputValue: note }))
     ),
   ]);
 }
