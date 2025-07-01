@@ -25,7 +25,6 @@ class Dispatcher {
 
   afterEveryCommand(handler: VoidFunction) {
     this.#afterHandlers.push(handler);
-
     return () => {
       const index = this.#afterHandlers.indexOf(handler);
       this.#afterHandlers.splice(index, 1);

@@ -9,13 +9,12 @@ import { EditForm, MainForm } from "./form.js";
 const appConfig = {
   state: notes,
   reducers: {
-    add: (state, payload) => ({
-      ...state,
-      payload,
-    }),
+    add: (state, payload) => [payload, ...state],
     edit: (state, payload) => {
+      const { index, message } = payload;
+
       const nextNotes = [...state];
-      nextNotes[payload.id] = [payload.message];
+      nextNotes[index] = message;
 
       return nextNotes;
     },
@@ -34,7 +33,7 @@ function App(notes, emit) {
     createElement(
       "div",
       { id: "note-list" },
-      notes.map((note) => EditForm({ inputValue: note }))
+      notes.map((note, index) => EditForm({ inputValue: note, index, emit }))
     ),
   ]);
 }

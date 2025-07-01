@@ -46,12 +46,9 @@ function getNote(index = 0, text = "", shortText = "") {
     noteList.replaceChild(nextNote, noteList.children[index]);
   });
 
-  console.log("getNote: index", index);
-
   return templateClone;
 }
 notes.forEach(function renderNoteForm(note, index) {
-  console.log("forEach: index", index);
   const nextNote = getNote(index, note, note.slice(0, 70) + "…");
 
   noteList.appendChild(nextNote);

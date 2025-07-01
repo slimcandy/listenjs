@@ -1,6 +1,6 @@
 import { createElement } from "../../packages/runtime/dist/listenjs.js";
 
-function Form({ input = {}, submit = {}, emit = () => {} } = {}) {
+function Form({ input = {}, submit = {}, formProps = {} } = {}) {
   const { value: inputValue, props: inputProps } = input;
   const { text: submitText = "Сохранить", className: submitClassName } = submit;
 
@@ -9,11 +9,7 @@ function Form({ input = {}, submit = {}, emit = () => {} } = {}) {
     {
       action: "#",
       id: "form",
-      on: {
-        submit: (event) => {
-          event.preventDefault();
-        },
-      },
+      ...formProps,
     },
     [
       createElement("fieldset", { role: "group" }, [
@@ -40,25 +36,64 @@ function Form({ input = {}, submit = {}, emit = () => {} } = {}) {
 }
 
 function MainForm({ emit }) {
+  var currentText = "";
+
   return Form({
     input: {
       props: {
         autofocus: true,
+        on: {
+          change: (event) => {
+            const { target } = event;
+            currentText = target.value;
+          },
+        },
       },
     },
-    emit,
+    formProps: {
+      on: {
+        submit: (event) => {
+          event.preventDefault();
+          if (currentText.length > 3) {
+            emit("add", currentText);
+          }
+        },
+      },
+    },
   });
 }
 
-function EditForm({ inputValue }) {
+function EditForm({ inputValue, emit, index }) {
+  var currentText = inputValue;
+
   return createElement("div", {}, [
     createElement("details", { name: "note" }, [
       createElement("summary", {}, [inputValue.slice(0, 70) + "…"]),
       Form({
-        inputValue,
+        input: {
+          value: inputValue,
+          props: {
+            on: {
+              change: (event) => {
+                const { target } = event;
+                currentText = target.value;
+              },
+            },
+          },
+        },
         submit: {
           text: "Изменить",
           className: "secondary",
+        },
+        formProps: {
+          on: {
+            submit: (event) => {
+              event.preventDefault();
+              if (currentText.length > 3) {
+                emit("edit", { index, message: currentText });
+              }
+            },
+          },
         },
       }),
     ]),
