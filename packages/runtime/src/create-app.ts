@@ -24,20 +24,21 @@ function createApp({ state, view, reducers = {} }) {
   }
 
   function renderApp() {
-    if (fiber) {
-      destroyDOM(fiber);
-    }
+    const nextFiber = view(state, emit);
 
-    fiber = view(state, emit);
     if (fiber && parentInstance) {
-      mountHostComponent(fiber, parentInstance);
+      fiber = patchDOM(fiber, nextFiber, parentInstance);
     }
   }
 
   return {
     mount(_parentInstance) {
       parentInstance = _parentInstance;
-      renderApp();
+      fiber = view(state, emit);
+
+      if (fiber && parentInstance) {
+        mountHostComponent(fiber, parentInstance);
+      }
     },
     unmount() {
       if (fiber) {

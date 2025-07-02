@@ -3,13 +3,12 @@ import {
   ElementFiber,
   Fiber,
   FiberChild,
-  FragmentFiber,
   Props,
   TextFiber,
 } from "./types";
 import { withoutNulls } from "./utils/arrays";
 
-function createElement(
+function createFiberFromElement(
   tag: string,
   props: Props = {},
   children: FiberChild[] = []
@@ -35,11 +34,4 @@ function createTextElement(text: string): TextFiber {
   };
 }
 
-function createFragment(children: FiberChild[]): FragmentFiber {
-  return {
-    type: DOMType.FRAGMENT,
-    children: mapTextNodes(withoutNulls(children)),
-  };
-}
-
-export { type DOMType, createElement };
+export { type DOMType, createFiberFromElement };
