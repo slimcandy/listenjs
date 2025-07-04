@@ -4,6 +4,13 @@ enum DOMType {
   FRAGMENT = "fragment",
 }
 
+enum ARRAY_DIFF_OP {
+  ADD = "add",
+  REMOVE = "remove",
+  MOVE = "move",
+  NOOP = "noop",
+}
+
 interface Props {
   [key: string]: any;
   on?: Record<string, EventListener>; // Event listeners
@@ -38,6 +45,7 @@ type FiberChild = string | Fiber; // Acceptable child types
 
 export {
   DOMType,
+  ARRAY_DIFF_OP,
   ElementFiber,
   Fiber,
   FiberChild,

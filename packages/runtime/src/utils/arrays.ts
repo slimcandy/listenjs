@@ -17,4 +17,20 @@ function arraysDiff<T>(
   };
 }
 
+class ArrayWithOriginalIndices {
+  #array = [];
+  #originalIndices = [];
+  #equalsFn;
+
+  constructor(array, equalsFn) {
+    this.#array = [...array];
+    this.#originalIndices = array.map((index) => index);
+    this.#equalsFn = equalsFn;
+  }
+
+  get length() {
+    return this.#array.length;
+  }
+}
+
 export { withoutNulls, arraysDiff };
