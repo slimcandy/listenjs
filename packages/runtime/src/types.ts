@@ -42,6 +42,7 @@ interface FragmentFiber {
 
 type Fiber = TextFiber | ElementFiber | FragmentFiber;
 type FiberChild = string | Fiber; // Acceptable child types
+type DomElement = Text | HTMLElement | Node;
 
 export {
   DOMType,
@@ -52,4 +53,5 @@ export {
   FragmentFiber,
   Props,
   TextFiber,
+  DomElement,
 };
