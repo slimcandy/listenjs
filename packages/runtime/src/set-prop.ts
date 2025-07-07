@@ -1,4 +1,6 @@
-function setProp(domElement: HTMLElement, attrs: Record<string, unknown>) {
+import { Props } from "./types";
+
+function setProp(domElement: HTMLElement, attrs: Props) {
   const { class: className, style, ...restAttrs } = attrs;
 
   if (typeof className === "string" || Array.isArray(className)) {
@@ -43,12 +45,12 @@ function removeStyle(domElement: HTMLElement, key: string) {
 function setValueForAttribute(
   domElement: HTMLElement,
   key: string,
-  value: string
+  value: unknown
 ) {
   if (value == null) {
     removeValueForAttribute(domElement, key);
   } else if (key.startsWith("data-")) {
-    domElement.setAttribute(key, value);
+    domElement.setAttribute(key, String(value));
   } else {
     domElement[key] = value;
   }
@@ -59,4 +61,10 @@ function removeValueForAttribute(domElement: HTMLElement, key: string) {
   domElement.removeAttribute(key);
 }
 
-export { setProp };
+export {
+  setProp,
+  setValueForAttribute,
+  removeValueForAttribute,
+  setStyle,
+  removeStyle,
+};

@@ -14,7 +14,7 @@ function createFiberFromElement(
   children: FiberChild[] = []
 ): ElementFiber {
   return {
-    type: DOMType.ELEMENT,
+    type: DOMType.ELEMENT as const,
     tag,
     props,
     children: mapTextNodes(withoutNulls(children)),
@@ -29,9 +29,9 @@ function mapTextNodes(children: FiberChild[]): Fiber[] {
 
 function createTextElement(text: string): TextFiber {
   return {
-    type: DOMType.TEXT,
+    type: DOMType.TEXT as const,
     value: text,
   };
 }
 
-export { type DOMType, createFiberFromElement };
+export { createFiberFromElement };

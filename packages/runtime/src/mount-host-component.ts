@@ -12,23 +12,23 @@ import {
 
 function mountHostComponent(
   fiber: Fiber,
-  parentInstance: Node,
-  positionIndex?: number
+  parentDOMNode: HTMLElement,
+  positionIndex: number | null = null
 ) {
-  if (parentInstance == undefined) {
+  if (parentDOMNode == undefined) {
     throw new Error(`
-      "Parent element is not defined: ${parentInstance}`);
+      "Parent element is not defined: ${parentDOMNode}`);
   }
 
   switch (fiber.type) {
     case DOMType.TEXT:
-      createTextInstance(fiber, parentInstance, positionIndex);
+      createTextInstance(fiber, parentDOMNode, positionIndex);
       break;
     case DOMType.ELEMENT:
-      createInstance(fiber, parentInstance, positionIndex);
+      createInstance(fiber, parentDOMNode, positionIndex);
       break;
     case DOMType.FRAGMENT:
-      createFragmentInstance(fiber, parentInstance, positionIndex);
+      createFragmentInstance(fiber, parentDOMNode, positionIndex);
       break;
     default:
       throw new Error(`Unknown fiber type`);
@@ -37,37 +37,37 @@ function mountHostComponent(
 
 function createTextInstance(
   fiber: TextFiber,
-  parentInstance: Node,
-  positionIndex?: number
+  parentDOMNode: HTMLElement,
+  positionIndex: number | null
 ) {
   const { value } = fiber;
   const domTextNode = document.createTextNode(value);
   fiber.domElement = domTextNode;
 
-  insertIntoDOM(domTextNode, parentInstance, positionIndex);
+  insertIntoDOM(domTextNode, parentDOMNode, positionIndex);
 }
 
 function createFragmentInstance(
   fiber: FragmentFiber,
-  parentInstance: Node,
-  positionIndex?: number
+  parentDOMNode: HTMLElement,
+  positionIndex: number | null
 ) {
   const { children } = fiber;
-  fiber.domElement = parentInstance;
+  fiber.domElement = parentDOMNode;
 
   children.forEach((child, index) => {
     mountHostComponent(
       child,
-      parentInstance,
-      positionIndex ? positionIndex + index : undefined
+      parentDOMNode,
+      positionIndex ? positionIndex + index : null
     );
   });
 }
 
 function createInstance(
   fiber: ElementFiber,
-  parentInstance: Node,
-  positionIndex?: number
+  parentDOMNode: HTMLElement,
+  positionIndex: number | null
 ) {
   const { tag, props, children } = fiber;
 
@@ -79,7 +79,7 @@ function createInstance(
     mountHostComponent(child, domElement);
   });
 
-  return insertIntoDOM(domElement, parentInstance, positionIndex);
+  return insertIntoDOM(domElement, parentDOMNode, positionIndex);
 }
 
 function setInitialProperties(
@@ -97,11 +97,11 @@ function setInitialProperties(
 
 function insertIntoDOM(
   domElement: DomElement,
-  parentInstance: Node,
-  positionIndex?: number
+  parentDOMNode: Node,
+  positionIndex: number | null
 ) {
   if (positionIndex == null) {
-    return parentInstance.appendChild(domElement);
+    return parentDOMNode.appendChild(domElement);
   }
 
   if (positionIndex < 0) {
@@ -110,12 +110,12 @@ function insertIntoDOM(
     );
   }
 
-  const children = parentInstance.childNodes;
+  const children = parentDOMNode.childNodes;
 
   if (positionIndex >= children.length) {
-    parentInstance.appendChild(domElement);
+    parentDOMNode.appendChild(domElement);
   } else {
-    parentInstance.insertBefore(domElement, children[positionIndex]);
+    parentDOMNode.insertBefore(domElement, children[positionIndex]);
   }
 }
 

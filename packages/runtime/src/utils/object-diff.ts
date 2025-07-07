@@ -1,4 +1,4 @@
-function objectDiff(
+function objectsDiff(
   oldObject: object,
   newObject: object
 ): {
@@ -18,4 +18,4 @@ function objectDiff(
   };
 }
 
-export { objectDiff };
+export { objectsDiff };

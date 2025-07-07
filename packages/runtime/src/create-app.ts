@@ -1,10 +1,11 @@
 import { destroyDOM } from "./destroy-dom";
 import { Dispatcher } from "./dispatcher";
 import { mountHostComponent } from "./mount-host-component";
+import { patchDOM } from "./patch-dom";
 import { Fiber } from "./types";
 
 function createApp({ state, view, reducers = {} }) {
-  let parentInstance: Node | null = null;
+  let parentInstance: HTMLElement | null = null;
   let fiber: Fiber | null = null;
 
   const dispatcher = new Dispatcher();

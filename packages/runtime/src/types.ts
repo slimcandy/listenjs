@@ -1,7 +1,7 @@
 enum DOMType {
-  TEXT = "text",
-  ELEMENT = "element",
-  FRAGMENT = "fragment",
+  TEXT = Node.TEXT_NODE,
+  ELEMENT = Node.ELEMENT_NODE,
+  FRAGMENT = Node.DOCUMENT_FRAGMENT_NODE,
 }
 
 enum ARRAY_DIFF_OP {
@@ -11,18 +11,21 @@ enum ARRAY_DIFF_OP {
   NOOP = "noop",
 }
 
-interface Props {
-  [key: string]: any;
+interface Attributes {
+  [key: string]: unknown; // For general string attributes like id, title, href, etc.
+}
+
+type Props = Attributes & {
   on?: Record<string, EventListener>; // Event listeners
   class?: string | string[]; // CSS classes
   style?: Record<string, string>; // Inline styles
-}
+};
 
 // Fiber node types
 interface TextFiber {
   type: DOMType.TEXT;
   value: string;
-  domElement?: Text;
+  domElement: Text;
 }
 
 interface ElementFiber {
@@ -30,19 +33,19 @@ interface ElementFiber {
   tag: string;
   props: Props;
   children: Fiber[];
-  domElement?: HTMLElement;
+  domElement: HTMLElement;
   listeners?: Record<string, EventListener>;
 }
 
 interface FragmentFiber {
   type: DOMType.FRAGMENT;
   children: Fiber[];
-  domElement?: Node; // Parent node for fragment
+  domElement: HTMLElement; // Parent node for fragment
 }
 
 type Fiber = TextFiber | ElementFiber | FragmentFiber;
 type FiberChild = string | Fiber; // Acceptable child types
-type DomElement = Text | HTMLElement | Node;
+type DomElement = Text | HTMLElement;
 
 export {
   DOMType,
@@ -51,6 +54,7 @@ export {
   Fiber,
   FiberChild,
   FragmentFiber,
+  Attributes,
   Props,
   TextFiber,
   DomElement,
