@@ -1,9 +1,11 @@
 import { destroyDOM } from "./destroy-dom";
+import { attachEventListener } from "./events";
 import { areFibersEqual } from "./fibers-equal";
 import { mountHostComponent } from "./mount-host-component";
 import {
+  removeStyle,
   removeValueForAttribute,
-  setProp,
+  setStyle,
   setValueForAttribute,
 } from "./set-prop";
 import {
@@ -148,6 +150,47 @@ function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
         ? classes.filter(isNotBlankOrEmptyString)
         : classes.split(/(\s+)/).filter(isNotBlankOrEmptyString);
     }
+  }
+
+  function patchStyles(
+    domElement: HTMLElement,
+    oldStyle: Props["style"] = {},
+    newStyle: Props["style"] = {}
+  ) {
+    const { added, removed, updated } = objectsDiff(oldStyle, newStyle);
+
+    for (const key of removed) {
+      removeStyle(domElement, key);
+    }
+
+    for (const key of added.concat(updated)) {
+      setStyle(domElement, key, newStyle[key]);
+    }
+  }
+
+  function patchEvents(
+    domElement: HTMLElement,
+    oldListeners: ElementFiber["listeners"] = {},
+    oldOnEvents: Props["on"] = {},
+    newOnEvents: Props["on"] = {}
+  ) {
+    const { added, removed, updated } = objectsDiff(oldOnEvents, newOnEvents);
+
+    for (const eventType of removed.concat(updated)) {
+      domElement.removeEventListener(eventType, oldListeners[eventType]);
+    }
+
+    const addedListeners: ElementFiber["listeners"] = {};
+
+    for (const eventType of added.concat(updated)) {
+      addedListeners[eventType] = attachEventListener(
+        eventType,
+        newOnEvents[eventType],
+        domElement
+      );
+    }
+
+    return addedListeners;
   }
 }
 
