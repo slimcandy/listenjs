@@ -119,4 +119,21 @@ function insertIntoDOM(
   }
 }
 
-export { mountHostComponent };
+function extractChildren(fiber: Fiber) {
+  if ("children" in fiber) {
+    const children: Fiber[] = [];
+
+    for (const child of fiber.children) {
+      if (child.type === DOMType.FRAGMENT) {
+        children.push(...extractChildren(child));
+      } else {
+        children.push(child);
+      }
+    }
+
+    return children;
+  }
+  return [];
+}
+
+export { mountHostComponent, extractChildren };

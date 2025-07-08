@@ -25,7 +25,7 @@ type Props = Attributes & {
 interface TextFiber {
   type: DOMType.TEXT;
   value: string;
-  domElement: Text;
+  domElement?: Text;
 }
 
 interface ElementFiber {
@@ -33,14 +33,14 @@ interface ElementFiber {
   tag: string;
   props: Props;
   children: Fiber[];
-  domElement: HTMLElement;
+  domElement?: HTMLElement;
   listeners?: Record<string, EventListener>;
 }
 
 interface FragmentFiber {
   type: DOMType.FRAGMENT;
   children: Fiber[];
-  domElement: HTMLElement; // Parent node for fragment
+  domElement?: HTMLElement; // Parent node for fragment
 }
 
 type Fiber = TextFiber | ElementFiber | FragmentFiber;

@@ -19,32 +19,29 @@ function arraysDiff<T>(
   };
 }
 
-type ArrayToCompare = unknown[];
-type EqualsFn = (a: unknown, b: unknown) => boolean;
-
-interface Operation {
+interface Operation<T> {
   op: ARRAY_DIFF_OP;
   index: number;
-  item: unknown;
+  item: T;
 }
 
-interface NoopOperation extends Operation {
+interface NoopOperation<T> extends Operation<T> {
   originalIndex: number;
 }
 
-interface MoveOperation extends Operation {
+interface MoveOperation<T> extends Operation<T> {
   originalIndex: number;
   from: number;
 }
 
-class ArrayWithOriginalIndices {
-  #array: ArrayToCompare = [];
+class ArrayWithOriginalIndices<T> {
+  #array: T[] = [];
   #originalIndices: number[] = [];
-  #equalsFn: EqualsFn;
+  #equalsFn: (a: T, b: T) => boolean;
 
-  constructor(array, equalsFn) {
+  constructor(array: T[], equalsFn: (a: T, b: T) => boolean) {
     this.#array = [...array];
-    this.#originalIndices = array.map((index) => index);
+    this.#originalIndices = array.map((_, index) => index);
     this.#equalsFn = equalsFn;
   }
 
@@ -56,7 +53,7 @@ class ArrayWithOriginalIndices {
     return this.#originalIndices[index];
   }
 
-  findIndexFrom(item: unknown, fromIndex: number) {
+  findIndexFrom(item: T, fromIndex: number) {
     for (let index = fromIndex; index < this.length; index++) {
       if (this.#equalsFn(item, this.#array[index])) {
         return index;
@@ -66,7 +63,7 @@ class ArrayWithOriginalIndices {
     return -1;
   }
 
-  wasElementRemoved(index: number, newArray: ArrayToCompare) {
+  wasElementRemoved(index: number, newArray: T[]) {
     if (index >= this.length) {
       return false;
     }
@@ -79,7 +76,7 @@ class ArrayWithOriginalIndices {
     return indexInNewArray === -1;
   }
 
-  wasElementTheSame(index: number, newArray: ArrayToCompare) {
+  wasElementTheSame(index: number, newArray: T[]) {
     if (index >= this.length) {
       return false;
     }
@@ -90,12 +87,12 @@ class ArrayWithOriginalIndices {
     return this.#equalsFn(item, newItem);
   }
 
-  wasElementAdded(item: unknown, fromIndex: number) {
+  wasElementAdded(item: T, fromIndex: number) {
     return this.findIndexFrom(item, fromIndex) === -1;
   }
 
-  removeItemAction(index: number): Operation {
-    const operation: Operation = {
+  removeItemAction(index: number): Operation<T> {
+    const operation: Operation<T> = {
       op: ARRAY_DIFF_OP.REMOVE,
       index,
       item: this.#array[index],
@@ -107,7 +104,7 @@ class ArrayWithOriginalIndices {
     return operation;
   }
 
-  noopItemAction(index: number): NoopOperation {
+  noopItemAction(index: number): NoopOperation<T> {
     return {
       op: ARRAY_DIFF_OP.NOOP,
       originalIndex: this.originalIndexAt(index),
@@ -116,8 +113,8 @@ class ArrayWithOriginalIndices {
     };
   }
 
-  addItemAction(item: unknown, index: number): Operation {
-    const operation: Operation = {
+  addItemAction(item: T, index: number): Operation<T> {
+    const operation: Operation<T> = {
       op: ARRAY_DIFF_OP.ADD,
       index,
       item,
@@ -129,10 +126,10 @@ class ArrayWithOriginalIndices {
     return operation;
   }
 
-  moveItemAction(item: unknown, toIndex: number): MoveOperation {
+  moveItemAction(item: T, toIndex: number): MoveOperation<T> {
     const fromIndex = this.findIndexFrom(item, toIndex);
 
-    const operation: MoveOperation = {
+    const operation: MoveOperation<T> = {
       op: ARRAY_DIFF_OP.MOVE,
       originalIndex: this.originalIndexAt(fromIndex),
       from: fromIndex,
@@ -149,8 +146,8 @@ class ArrayWithOriginalIndices {
     return operation;
   }
 
-  removeRestItems(index: number): Operation[] {
-    const operations: Operation[] = [];
+  removeRestItems(index: number): Operation<T>[] {
+    const operations: Operation<T>[] = [];
 
     while (this.length > index) {
       operations.push(this.removeItemAction(index));
@@ -160,13 +157,14 @@ class ArrayWithOriginalIndices {
   }
 }
 
-function arraysDiffSequence(
-  oldArray: ArrayToCompare,
-  newArray: ArrayToCompare,
-  equalsFn: EqualsFn = (a, b) => a === b
-): Array<Operation | NoopOperation | MoveOperation> {
-  const sequence: Array<Operation | NoopOperation | MoveOperation> = [];
-  const array = new ArrayWithOriginalIndices(oldArray, equalsFn);
+function arraysDiffSequence<T>(
+  oldArray: T[],
+  newArray: T[],
+  equalsFn: (a: T, b: T) => boolean = (a, b) => a === b
+): Array<Operation<T> | NoopOperation<T> | MoveOperation<T>> {
+  const sequence: Array<Operation<T> | NoopOperation<T> | MoveOperation<T>> =
+    [];
+  const array = new ArrayWithOriginalIndices<T>(oldArray, equalsFn);
 
   for (let index = 0; index < newArray.length; index++) {
     if (array.wasElementRemoved(index, newArray)) {

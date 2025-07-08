@@ -1,7 +1,7 @@
 import { destroyDOM } from "./destroy-dom";
 import { attachEventListener } from "./events";
 import { areFibersEqual } from "./fibers-equal";
-import { mountHostComponent } from "./mount-host-component";
+import { extractChildren, mountHostComponent } from "./mount-host-component";
 import {
   removeStyle,
   removeValueForAttribute,
@@ -9,6 +9,7 @@ import {
   setValueForAttribute,
 } from "./set-prop";
 import {
+  ARRAY_DIFF_OP,
   Attributes,
   DomElement,
   DOMType,
@@ -17,7 +18,7 @@ import {
   Props,
   TextFiber,
 } from "./types";
-import { arraysDiff } from "./utils/arrays";
+import { arraysDiff, arraysDiffSequence } from "./utils/arrays";
 import { objectsDiff } from "./utils/object-diff";
 import { isNotBlankOrEmptyString } from "./utils/strings";
 
@@ -56,6 +57,10 @@ function patchDOM(
       return newFiber;
     }
   }
+
+  patchChildren(oldFiber, newFiber);
+
+  return newFiber;
 }
 
 function findIndexInParent(
@@ -74,6 +79,10 @@ function findIndexInParent(
 }
 
 function patchText(oldFiber: TextFiber, newFiber: TextFiber) {
+  if (!oldFiber.domElement) {
+    throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
+  }
+
   const domElement: Text = oldFiber.domElement;
   const { value: oldText } = oldFiber;
   const { value: newText } = newFiber;
@@ -84,6 +93,10 @@ function patchText(oldFiber: TextFiber, newFiber: TextFiber) {
 }
 
 function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
+  if (!oldFiber.domElement) {
+    throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
+  }
+
   const domElement: HTMLElement = oldFiber.domElement;
   const {
     class: oldClass,
@@ -191,6 +204,76 @@ function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
     }
 
     return addedListeners;
+  }
+}
+
+function patchChildren(oldFiber: Fiber, newFiber: Fiber) {
+  if (!oldFiber.domElement) {
+    throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
+  }
+
+  const oldChildren = extractChildren(oldFiber);
+  const newChildren = extractChildren(newFiber);
+  const parentDomElement = oldFiber.domElement;
+
+  const diffSequence = arraysDiffSequence<Fiber>(
+    oldChildren,
+    newChildren,
+    areFibersEqual
+  );
+
+  for (const operation of diffSequence) {
+    const { index, item, op } = operation;
+
+    switch (op) {
+      case ARRAY_DIFF_OP.ADD: {
+        if (parentDomElement instanceof HTMLElement) {
+          mountHostComponent(item, parentDomElement, index);
+        }
+        break;
+      }
+      case ARRAY_DIFF_OP.REMOVE: {
+        destroyDOM(item);
+        break;
+      }
+      case ARRAY_DIFF_OP.MOVE: {
+        if (parentDomElement instanceof HTMLElement) {
+          if ("originalIndex" in operation) {
+            const oldChild = oldChildren[operation.originalIndex];
+            const newChild = newChildren[index];
+
+            if (!oldChild.domElement) {
+              throw new Error(
+                `Cannot find DOM Element for old fiber: ${oldFiber}`
+              );
+            }
+
+            const domElement = oldChild.domElement;
+            const domElementAtTargetPosition =
+              parentDomElement.childNodes[index];
+
+            parentDomElement.insertBefore(
+              domElement,
+              domElementAtTargetPosition
+            );
+            patchDOM(oldChild, newChild, parentDomElement);
+          }
+        }
+        break;
+      }
+      case ARRAY_DIFF_OP.NOOP: {
+        if (parentDomElement instanceof HTMLElement) {
+          if ("originalIndex" in operation) {
+            patchDOM(
+              oldChildren[operation.originalIndex],
+              newChildren[index],
+              parentDomElement
+            );
+          }
+        }
+        break;
+      }
+    }
   }
 }
 
