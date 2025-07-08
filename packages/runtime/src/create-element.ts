@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { withoutNulls } from "./utils/arrays";
 
-function createFiberFromElement(
+function createFiber(
   tag: string,
   props: Props = {},
   children: FiberChild[] = []
@@ -34,4 +34,4 @@ function createTextElement(text: string): TextFiber {
   };
 }
 
-export { createFiberFromElement };
+export { createFiber };

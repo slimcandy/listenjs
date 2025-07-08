@@ -1,2 +1,2 @@
 export { createApp } from "./create-app";
-export { createFiberFromElement } from "./create-element";
+export { createFiber } from "./create-element";

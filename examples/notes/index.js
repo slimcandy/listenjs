@@ -1,6 +1,6 @@
 import {
   createApp,
-  createElement,
+  createFiber,
 } from "../../packages/runtime/dist/listenjs.js";
 
 import { notes } from "../../../../examples/notes/note-db.js";
@@ -23,14 +23,14 @@ const appConfig = {
 };
 
 function App(notes, emit) {
-  return createElement("main", { className: "container" }, [
-    createElement("h1", {}, ["Мои заметки"]),
+  return createFiber("main", { className: "container" }, [
+    createFiber("h1", {}, ["Мои заметки"]),
 
     MainForm({ emit }),
 
-    createElement("hr"),
+    createFiber("hr"),
 
-    createElement(
+    createFiber(
       "div",
       { id: "note-list" },
       notes.map((note, index) => EditForm({ inputValue: note, index, emit }))

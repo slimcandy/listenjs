@@ -53,8 +53,7 @@ function patchDOM(
       if (oldFiber.type === DOMType.ELEMENT) {
         patchElement(oldFiber, newFiber);
       }
-
-      return newFiber;
+      break;
     }
   }
 
@@ -211,6 +210,8 @@ function patchChildren(oldFiber: Fiber, newFiber: Fiber) {
   if (!oldFiber.domElement) {
     throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
   }
+
+  console.log("Patching children...");
 
   const oldChildren = extractChildren(oldFiber);
   const newChildren = extractChildren(newFiber);
