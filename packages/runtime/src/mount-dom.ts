@@ -10,7 +10,7 @@ import {
   TextFiber,
 } from "./types";
 
-function mountHostComponent(
+function mountDOM(
   fiber: Fiber,
   parentDOMNode: HTMLElement,
   positionIndex: number | null = null
@@ -56,7 +56,7 @@ function createFragmentInstance(
   fiber.domElement = parentDOMNode;
 
   children.forEach((child, index) => {
-    mountHostComponent(
+    mountDOM(
       child,
       parentDOMNode,
       positionIndex ? positionIndex + index : null
@@ -76,7 +76,7 @@ function createInstance(
   fiber.domElement = domElement;
 
   children.forEach((child) => {
-    mountHostComponent(child, domElement);
+    mountDOM(child, domElement);
   });
 
   return insertIntoDOM(domElement, parentDOMNode, positionIndex);
@@ -136,4 +136,4 @@ function extractChildren(fiber: Fiber) {
   return [];
 }
 
-export { mountHostComponent, extractChildren };
+export { mountDOM, extractChildren };

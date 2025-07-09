@@ -1,7 +1,7 @@
 import { destroyDOM } from "./destroy-dom";
 import { attachEventListener } from "./events";
 import { areFibersEqual } from "./fibers-equal";
-import { extractChildren, mountHostComponent } from "./mount-host-component";
+import { extractChildren, mountDOM } from "./mount-dom";
 import {
   removeStyle,
   removeValueForAttribute,
@@ -33,7 +33,7 @@ function patchDOM(
       : undefined;
 
     destroyDOM(oldFiber);
-    mountHostComponent(newFiber, parentDOMNode, positionIndex);
+    mountDOM(newFiber, parentDOMNode, positionIndex);
 
     return newFiber;
   }
@@ -229,7 +229,7 @@ function patchChildren(oldFiber: Fiber, newFiber: Fiber) {
     switch (op) {
       case ARRAY_DIFF_OP.ADD: {
         if (parentDomElement instanceof HTMLElement) {
-          mountHostComponent(item, parentDomElement, index);
+          mountDOM(item, parentDomElement, index);
         }
         break;
       }

@@ -1,6 +1,6 @@
 import { destroyDOM } from "./destroy-dom";
 import { Dispatcher } from "./dispatcher";
-import { mountHostComponent } from "./mount-host-component";
+import { mountDOM } from "./mount-dom";
 import { patchDOM } from "./patch-dom";
 import { Fiber } from "./types";
 
@@ -25,10 +25,10 @@ function createApp({ state, view, reducers = {} }) {
   }
 
   function renderApp() {
-    const nextFiber = view(state, emit);
+    const newFiber = view(state, emit);
 
     if (fiber && parentInstance) {
-      fiber = patchDOM(fiber, nextFiber, parentInstance);
+      fiber = patchDOM(fiber, newFiber, parentInstance);
     }
   }
 
@@ -38,7 +38,7 @@ function createApp({ state, view, reducers = {} }) {
       fiber = view(state, emit);
 
       if (fiber && parentInstance) {
-        mountHostComponent(fiber, parentInstance);
+        mountDOM(fiber, parentInstance);
       }
     },
     unmount() {
