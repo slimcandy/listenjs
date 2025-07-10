@@ -1,7 +1,7 @@
 import { destroyDOM } from "./destroy-dom";
-import { mountDOM } from "./mount-dom";
+import { extractChildren, mountDOM } from "./mount-dom";
 import { patchDOM } from "./patch-dom";
-import { Fiber } from "./types";
+import { DOMType, Fiber } from "./types";
 
 function defineComponent({
   render,
@@ -21,6 +21,36 @@ function defineComponent({
     constructor(props = {}) {
       this.props = props;
       this.state = state ? state(props) : {};
+    }
+
+    get elements() {
+      if (this.#fiber == null) {
+        return [];
+      }
+
+      if (this.#fiber.type === DOMType.FRAGMENT) {
+        return extractChildren(this.#fiber).map((child) => child.domElement);
+      }
+
+      return [this.#fiber.domElement];
+    }
+
+    get firstElement() {
+      return this.elements[0];
+    }
+
+    get offset() {
+      if (
+        this.#domElement &&
+        this.#fiber?.type === DOMType.FRAGMENT &&
+        this.firstElement
+      ) {
+        return Array.from(this.#domElement.children ?? []).indexOf(
+          this.firstElement
+        );
+      }
+
+      return 0;
     }
 
     updateState(state) {
