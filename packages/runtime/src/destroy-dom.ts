@@ -1,26 +1,26 @@
 import { removeEventListeners } from "./events";
 import {
-  DOMType,
-  ElementFiber,
-  Fiber,
-  FragmentFiber,
-  TextFiber,
+  VDOMType,
+  ElementVNode,
+  FragmentVNode,
+  TextVNode,
+  VNode,
 } from "./types";
 
-function destroyDOM(fiber: Fiber) {
-  const { type } = fiber;
+function destroyDOM(vNode: VNode) {
+  const { type } = vNode;
 
   switch (type) {
-    case DOMType.TEXT: {
-      removeTextNode(fiber);
+    case VDOMType.TEXT: {
+      removeTextNode(vNode);
       break;
     }
-    case DOMType.ELEMENT: {
-      removeElementNode(fiber);
+    case VDOMType.ELEMENT: {
+      removeElementNode(vNode);
       break;
     }
-    case DOMType.FRAGMENT: {
-      removeFragmentNodes(fiber);
+    case VDOMType.FRAGMENT: {
+      removeFragmentNodes(vNode);
       break;
     }
 
@@ -29,18 +29,18 @@ function destroyDOM(fiber: Fiber) {
     }
   }
 
-  delete fiber.domElement;
+  delete vNode.domElement;
 }
 
-function removeTextNode(fiber: TextFiber) {
-  const { domElement } = fiber;
+function removeTextNode(vNode: TextVNode) {
+  const { domElement } = vNode;
   if (domElement) {
     domElement.remove();
   }
 }
 
-function removeElementNode(fiber: ElementFiber) {
-  const { domElement, children, listeners } = fiber;
+function removeElementNode(vNode: ElementVNode) {
+  const { domElement, children, listeners } = vNode;
 
   if (!domElement) return;
 
@@ -49,12 +49,12 @@ function removeElementNode(fiber: ElementFiber) {
 
   if (listeners) {
     removeEventListeners(listeners, domElement);
-    delete fiber.listeners;
+    delete vNode.listeners;
   }
 }
 
-function removeFragmentNodes(fiber: FragmentFiber) {
-  const { children } = fiber;
+function removeFragmentNodes(vNode: FragmentVNode) {
+  const { children } = vNode;
   children.forEach(destroyDOM);
 }
 

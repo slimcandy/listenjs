@@ -1,37 +1,37 @@
 import {
-  DOMType,
-  ElementFiber,
-  Fiber,
-  FiberChild,
+  VDOMType,
+  ElementVNode,
+  VNode,
+  VNodeChild,
   Props,
-  TextFiber,
+  TextVNode,
 } from "./types";
 import { withoutNulls } from "./utils/arrays";
 
-function createFiber(
+function createElement(
   tag: string,
   props: Props = {},
-  children: FiberChild[] = []
-): ElementFiber {
+  children: VNodeChild[] = []
+): ElementVNode {
   return {
-    type: DOMType.ELEMENT as const,
+    type: VDOMType.ELEMENT as const,
     tag,
     props,
     children: mapTextNodes(withoutNulls(children)),
   };
 }
 
-function mapTextNodes(children: FiberChild[]): Fiber[] {
+function mapTextNodes(children: VNodeChild[]): VNode[] {
   return children.map((child) =>
     typeof child === "string" ? createTextElement(child) : child
   );
 }
 
-function createTextElement(text: string): TextFiber {
+function createTextElement(text: string): TextVNode {
   return {
-    type: DOMType.TEXT as const,
+    type: VDOMType.TEXT as const,
     value: text,
   };
 }
 
-export { createFiber };
+export { createElement };

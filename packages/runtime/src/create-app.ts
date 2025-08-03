@@ -2,11 +2,11 @@ import { destroyDOM } from "./destroy-dom";
 import { Dispatcher } from "./dispatcher";
 import { mountHostComponent } from "./mount-host-component";
 import { patchDOM } from "./patch-dom";
-import { Fiber } from "./types";
+import { VNode } from "./types";
 
 function createApp({ state, view, reducers = {} }) {
-  let parentInstance: HTMLElement | null = null;
-  let fiber: Fiber | null = null;
+  let parentElement: HTMLElement | null = null;
+  let vDOMRootNode: VNode | null = null;
 
   const dispatcher = new Dispatcher();
   const subscriptions = [dispatcher.afterEveryCommand(renderApp)];
@@ -25,27 +25,27 @@ function createApp({ state, view, reducers = {} }) {
   }
 
   function renderApp() {
-    const nextFiber = view(state, emit);
+    const nextVDOMRootNode = view(state, emit);
 
-    if (fiber && parentInstance) {
-      fiber = patchDOM(fiber, nextFiber, parentInstance);
+    if (vDOMRootNode && parentElement) {
+      vDOMRootNode = patchDOM(vDOMRootNode, nextVDOMRootNode, parentElement);
     }
   }
 
   return {
-    mount(_parentInstance) {
-      parentInstance = _parentInstance;
-      fiber = view(state, emit);
+    mount(_parentElement: HTMLElement | null) {
+      parentElement = _parentElement;
+      vDOMRootNode = view(state, emit);
 
-      if (fiber && parentInstance) {
-        mountHostComponent(fiber, parentInstance);
+      if (vDOMRootNode && parentElement) {
+        mountHostComponent(vDOMRootNode, parentElement);
       }
     },
     unmount() {
-      if (fiber) {
-        destroyDOM(fiber);
+      if (vDOMRootNode) {
+        destroyDOM(vDOMRootNode);
       }
-      fiber = null;
+      vDOMRootNode = null;
       subscriptions.forEach((unsubscribe) => unsubscribe());
     },
   };

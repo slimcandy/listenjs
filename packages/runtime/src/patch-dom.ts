@@ -1,6 +1,6 @@
 import { destroyDOM } from "./destroy-dom";
 import { attachEventListener } from "./events";
-import { areFibersEqual } from "./fibers-equal";
+import { areVNodesEqual } from "./vnode-equal";
 import { extractChildren, mountHostComponent } from "./mount-host-component";
 import {
   removeStyle,
@@ -12,54 +12,54 @@ import {
   ARRAY_DIFF_OP,
   Attributes,
   DomElement,
-  DOMType,
-  ElementFiber,
-  Fiber,
+  VDOMType,
+  ElementVNode,
   Props,
-  TextFiber,
+  TextVNode,
+  VNode,
 } from "./types";
 import { arraysDiff, arraysDiffSequence } from "./utils/arrays";
 import { objectsDiff } from "./utils/object-diff";
 import { isNotBlankOrEmptyString } from "./utils/strings";
 
 function patchDOM(
-  oldFiber: Fiber,
-  newFiber: Fiber,
+  oldVNode: VNode,
+  newVNode: VNode,
   parentDOMNode: HTMLElement
 ) {
-  if (!areFibersEqual(oldFiber, newFiber)) {
-    const positionIndex = oldFiber.domElement
-      ? findIndexInParent(parentDOMNode, oldFiber.domElement)
+  if (!areVNodesEqual(oldVNode, newVNode)) {
+    const positionIndex = oldVNode.domElement
+      ? findIndexInParent(parentDOMNode, oldVNode.domElement)
       : undefined;
 
-    destroyDOM(oldFiber);
-    mountHostComponent(newFiber, parentDOMNode, positionIndex);
+    destroyDOM(oldVNode);
+    mountHostComponent(newVNode, parentDOMNode, positionIndex);
 
-    return newFiber;
+    return newVNode;
   }
 
-  newFiber.domElement = oldFiber.domElement;
+  newVNode.domElement = oldVNode.domElement;
 
-  switch (newFiber.type) {
-    case DOMType.TEXT: {
-      if (oldFiber.type === DOMType.TEXT) {
-        patchText(oldFiber, newFiber);
+  switch (newVNode.type) {
+    case VDOMType.TEXT: {
+      if (oldVNode.type === VDOMType.TEXT) {
+        patchText(oldVNode, newVNode);
       }
 
-      return newFiber;
+      return newVNode;
     }
 
-    case DOMType.ELEMENT: {
-      if (oldFiber.type === DOMType.ELEMENT) {
-        patchElement(oldFiber, newFiber);
+    case VDOMType.ELEMENT: {
+      if (oldVNode.type === VDOMType.ELEMENT) {
+        patchElement(oldVNode, newVNode);
       }
       break;
     }
   }
 
-  patchChildren(oldFiber, newFiber);
+  patchChildren(oldVNode, newVNode);
 
-  return newFiber;
+  return newVNode;
 }
 
 function findIndexInParent(
@@ -77,44 +77,44 @@ function findIndexInParent(
   return positionIndex;
 }
 
-function patchText(oldFiber: TextFiber, newFiber: TextFiber) {
-  if (!oldFiber.domElement) {
-    throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
+function patchText(oldVNode: TextVNode, newVNode: TextVNode) {
+  if (!oldVNode.domElement) {
+    throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
   }
 
-  const domElement: Text = oldFiber.domElement;
-  const { value: oldText } = oldFiber;
-  const { value: newText } = newFiber;
+  const domElement: Text = oldVNode.domElement;
+  const { value: oldText } = oldVNode;
+  const { value: newText } = newVNode;
 
   if (oldText !== newText) {
     domElement.nodeValue = newText;
   }
 }
 
-function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
-  if (!oldFiber.domElement) {
-    throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
+function patchElement(oldVNode: ElementVNode, newVNode: ElementVNode) {
+  if (!oldVNode.domElement) {
+    throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
   }
 
-  const domElement: HTMLElement = oldFiber.domElement;
+  const domElement: HTMLElement = oldVNode.domElement;
   const {
     class: oldClass,
     style: oldStyle,
     on: oldOnEvents,
     ...oldRestAttributes
-  } = oldFiber.props;
+  } = oldVNode.props;
   const {
     class: newClass,
     style: newStyle,
     on: newOnEvents,
     ...newRestAttributes
-  } = newFiber.props;
-  const { listeners: oldListeners } = oldFiber;
+  } = newVNode.props;
+  const { listeners: oldListeners } = oldVNode;
 
   patchAttributes(domElement, oldRestAttributes, newRestAttributes);
   patchClasses(domElement, oldClass, newClass);
   patchStyles(domElement, oldStyle, newStyle);
-  newFiber.listeners = patchEvents(
+  newVNode.listeners = patchEvents(
     domElement,
     oldListeners,
     oldOnEvents,
@@ -182,7 +182,7 @@ function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
 
   function patchEvents(
     domElement: HTMLElement,
-    oldListeners: ElementFiber["listeners"] = {},
+    oldListeners: ElementVNode["listeners"] = {},
     oldOnEvents: Props["on"] = {},
     newOnEvents: Props["on"] = {}
   ) {
@@ -192,7 +192,7 @@ function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
       domElement.removeEventListener(eventType, oldListeners[eventType]);
     }
 
-    const addedListeners: ElementFiber["listeners"] = {};
+    const addedListeners: ElementVNode["listeners"] = {};
 
     for (const eventType of added.concat(updated)) {
       addedListeners[eventType] = attachEventListener(
@@ -206,21 +206,19 @@ function patchElement(oldFiber: ElementFiber, newFiber: ElementFiber) {
   }
 }
 
-function patchChildren(oldFiber: Fiber, newFiber: Fiber) {
-  if (!oldFiber.domElement) {
-    throw new Error(`Cannot find DOM Element for old fiber: ${oldFiber}`);
+function patchChildren(oldVNode: VNode, newVNode: VNode) {
+  if (!oldVNode.domElement) {
+    throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
   }
 
-  console.log("Patching children...");
+  const oldChildren = extractChildren(oldVNode);
+  const newChildren = extractChildren(newVNode);
+  const parentDomElement = oldVNode.domElement;
 
-  const oldChildren = extractChildren(oldFiber);
-  const newChildren = extractChildren(newFiber);
-  const parentDomElement = oldFiber.domElement;
-
-  const diffSequence = arraysDiffSequence<Fiber>(
+  const diffSequence = arraysDiffSequence<VNode>(
     oldChildren,
     newChildren,
-    areFibersEqual
+    areVNodesEqual
   );
 
   for (const operation of diffSequence) {
@@ -245,7 +243,7 @@ function patchChildren(oldFiber: Fiber, newFiber: Fiber) {
 
             if (!oldChild.domElement) {
               throw new Error(
-                `Cannot find DOM Element for old fiber: ${oldFiber}`
+                `Cannot find DOM Element for old vNode: ${oldVNode}`
               );
             }
 

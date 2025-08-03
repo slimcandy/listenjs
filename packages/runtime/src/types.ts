@@ -1,4 +1,4 @@
-enum DOMType {
+enum VDOMType {
   TEXT = Node.TEXT_NODE,
   ELEMENT = Node.ELEMENT_NODE,
   FRAGMENT = Node.DOCUMENT_FRAGMENT_NODE,
@@ -21,41 +21,41 @@ type Props = Attributes & {
   style?: Record<string, string>; // Inline styles
 };
 
-// Fiber node types
-interface TextFiber {
-  type: DOMType.TEXT;
+// Virtual DOM node types
+interface TextVNode {
+  type: VDOMType.TEXT;
   value: string;
   domElement?: Text;
 }
 
-interface ElementFiber {
-  type: DOMType.ELEMENT;
+interface ElementVNode {
+  type: VDOMType.ELEMENT;
   tag: string;
   props: Props;
-  children: Fiber[];
+  children: VNode[];
   domElement?: HTMLElement;
   listeners?: Record<string, EventListener>;
 }
 
-interface FragmentFiber {
-  type: DOMType.FRAGMENT;
-  children: Fiber[];
+interface FragmentVNode {
+  type: VDOMType.FRAGMENT;
+  children: VNode[];
   domElement?: HTMLElement; // Parent node for fragment
 }
 
-type Fiber = TextFiber | ElementFiber | FragmentFiber;
-type FiberChild = string | Fiber; // Acceptable child types
+type VNode = TextVNode | ElementVNode | FragmentVNode;
+type VNodeChild = string | VNode; // Acceptable child types
 type DomElement = Text | HTMLElement;
 
 export {
-  DOMType,
+  VDOMType,
   ARRAY_DIFF_OP,
-  ElementFiber,
-  Fiber,
-  FiberChild,
-  FragmentFiber,
+  ElementVNode,
+  VNode,
+  VNodeChild,
+  FragmentVNode,
   Attributes,
   Props,
-  TextFiber,
+  TextVNode,
   DomElement,
 };
