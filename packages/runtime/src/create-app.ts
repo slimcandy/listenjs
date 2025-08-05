@@ -1,6 +1,6 @@
 import { destroyDOM } from "./destroy-dom";
 import { Dispatcher } from "./dispatcher";
-import { mountHostComponent } from "./mount-host-component";
+import { mountDOM } from "./mount-dom";
 import { patchDOM } from "./patch-dom";
 import { VNode } from "./types";
 
@@ -38,7 +38,7 @@ function createApp({ state, view, reducers = {} }) {
       vDOMRootNode = view(state, emit);
 
       if (vDOMRootNode && parentElement) {
-        mountHostComponent(vDOMRootNode, parentElement);
+        mountDOM(vDOMRootNode, parentElement);
       }
     },
     unmount() {

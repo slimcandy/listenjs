@@ -18,4 +18,8 @@ function objectsDiff(
   };
 }
 
-export { objectsDiff };
+function hasOwnProperty(obj: object, prop: string) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+export { objectsDiff, hasOwnProperty };

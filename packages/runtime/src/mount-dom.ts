@@ -1,4 +1,5 @@
 import { attachEventListeners } from "./events";
+import { Fiber } from "./fiber";
 import { setProp } from "./set-prop";
 import {
   VDOMType,
@@ -10,10 +11,11 @@ import {
   VNode,
 } from "./types";
 
-function mountHostComponent(
+function mountDOM(
   vNode: VNode,
   parentDOMNode: HTMLElement,
-  positionIndex: number | null = null
+  positionIndex: number | null = null,
+  parentFiber: Fiber | null = null
 ) {
   if (parentDOMNode == undefined) {
     throw new Error(`
@@ -25,10 +27,10 @@ function mountHostComponent(
       createTextInstance(vNode, parentDOMNode, positionIndex);
       break;
     case VDOMType.ELEMENT:
-      createInstance(vNode, parentDOMNode, positionIndex);
+      createInstance(vNode, parentDOMNode, positionIndex, parentFiber);
       break;
     case VDOMType.FRAGMENT:
-      createFragmentInstance(vNode, parentDOMNode, positionIndex);
+      createFragmentInstance(vNode, parentDOMNode, positionIndex, parentFiber);
       break;
     default:
       throw new Error(`Unknown vNode type`);
@@ -50,16 +52,18 @@ function createTextInstance(
 function createFragmentInstance(
   vNode: FragmentVNode,
   parentDOMNode: HTMLElement,
-  positionIndex: number | null
+  positionIndex: number | null,
+  parentFiber: Fiber | null = null
 ) {
   const { children } = vNode;
   vNode.domElement = parentDOMNode;
 
   children.forEach((child, index) => {
-    mountHostComponent(
+    mountDOM(
       child,
       parentDOMNode,
-      positionIndex ? positionIndex + index : null
+      positionIndex ? positionIndex + index : null,
+      parentFiber
     );
   });
 }
@@ -67,16 +71,17 @@ function createFragmentInstance(
 function createInstance(
   vNode: ElementVNode,
   parentDOMNode: HTMLElement,
-  positionIndex: number | null
+  positionIndex: number | null,
+  parentFiber: Fiber | null = null
 ) {
   const { tag, props, children } = vNode;
 
   const domElement = document.createElement(tag);
-  setInitialProperties(domElement, props, vNode);
+  setInitialProperties(domElement, props, vNode, parentFiber);
   vNode.domElement = domElement;
 
   children.forEach((child) => {
-    mountHostComponent(child, domElement);
+    mountDOM(child, domElement, null, parentFiber);
   });
 
   return insertIntoDOM(domElement, parentDOMNode, positionIndex);
@@ -85,12 +90,13 @@ function createInstance(
 function setInitialProperties(
   domElement: HTMLElement,
   props: Props,
-  vNode: ElementVNode
+  vNode: ElementVNode,
+  parentFiber: Fiber | null
 ) {
   const { on: events, ...attrs } = props;
 
   if (events) {
-    vNode.listeners = attachEventListeners(events, domElement);
+    vNode.listeners = attachEventListeners(events, domElement, parentFiber);
   }
   setProp(domElement, attrs);
 }
@@ -136,4 +142,4 @@ function extractChildren(vNode: VNode) {
   return [];
 }
 
-export { mountHostComponent, extractChildren };
+export { mountDOM, extractChildren };

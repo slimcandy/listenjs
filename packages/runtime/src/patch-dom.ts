@@ -1,7 +1,7 @@
 import { destroyDOM } from "./destroy-dom";
 import { attachEventListener } from "./events";
 import { areVNodesEqual } from "./vnode-equal";
-import { extractChildren, mountHostComponent } from "./mount-host-component";
+import { extractChildren, mountDOM } from "./mount-dom";
 import {
   removeStyle,
   removeValueForAttribute,
@@ -19,13 +19,15 @@ import {
   VNode,
 } from "./types";
 import { arraysDiff, arraysDiffSequence } from "./utils/arrays";
-import { objectsDiff } from "./utils/object-diff";
+import { objectsDiff } from "./utils/objects";
 import { isNotBlankOrEmptyString } from "./utils/strings";
+import { Fiber } from "./fiber";
 
 function patchDOM(
   oldVNode: VNode,
   newVNode: VNode,
-  parentDOMNode: HTMLElement
+  parentDOMNode: HTMLElement,
+  parentFiber: Fiber | null = null
 ) {
   if (!areVNodesEqual(oldVNode, newVNode)) {
     const positionIndex = oldVNode.domElement
@@ -33,7 +35,7 @@ function patchDOM(
       : undefined;
 
     destroyDOM(oldVNode);
-    mountHostComponent(newVNode, parentDOMNode, positionIndex);
+    mountDOM(newVNode, parentDOMNode, positionIndex, parentFiber);
 
     return newVNode;
   }
@@ -51,13 +53,13 @@ function patchDOM(
 
     case VDOMType.ELEMENT: {
       if (oldVNode.type === VDOMType.ELEMENT) {
-        patchElement(oldVNode, newVNode);
+        patchElement(oldVNode, newVNode, parentFiber);
       }
       break;
     }
   }
 
-  patchChildren(oldVNode, newVNode);
+  patchChildren(oldVNode, newVNode, parentFiber);
 
   return newVNode;
 }
@@ -91,7 +93,11 @@ function patchText(oldVNode: TextVNode, newVNode: TextVNode) {
   }
 }
 
-function patchElement(oldVNode: ElementVNode, newVNode: ElementVNode) {
+function patchElement(
+  oldVNode: ElementVNode,
+  newVNode: ElementVNode,
+  parentFiber: Fiber | null = null
+) {
   if (!oldVNode.domElement) {
     throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
   }
@@ -118,7 +124,8 @@ function patchElement(oldVNode: ElementVNode, newVNode: ElementVNode) {
     domElement,
     oldListeners,
     oldOnEvents,
-    newOnEvents
+    newOnEvents,
+    parentFiber
   );
 
   function patchAttributes(
@@ -184,7 +191,8 @@ function patchElement(oldVNode: ElementVNode, newVNode: ElementVNode) {
     domElement: HTMLElement,
     oldListeners: ElementVNode["listeners"] = {},
     oldOnEvents: Props["on"] = {},
-    newOnEvents: Props["on"] = {}
+    newOnEvents: Props["on"] = {},
+    parentFiber: Fiber | null = null
   ) {
     const { added, removed, updated } = objectsDiff(oldOnEvents, newOnEvents);
 
@@ -198,7 +206,8 @@ function patchElement(oldVNode: ElementVNode, newVNode: ElementVNode) {
       addedListeners[eventType] = attachEventListener(
         eventType,
         newOnEvents[eventType],
-        domElement
+        domElement,
+        parentFiber
       );
     }
 
@@ -206,7 +215,11 @@ function patchElement(oldVNode: ElementVNode, newVNode: ElementVNode) {
   }
 }
 
-function patchChildren(oldVNode: VNode, newVNode: VNode) {
+function patchChildren(
+  oldVNode: VNode,
+  newVNode: VNode,
+  parentFiber: Fiber | null = null
+) {
   if (!oldVNode.domElement) {
     throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
   }
@@ -223,11 +236,12 @@ function patchChildren(oldVNode: VNode, newVNode: VNode) {
 
   for (const operation of diffSequence) {
     const { index, item, op } = operation;
+    const offset = parentFiber?.offset ?? 0;
 
     switch (op) {
       case ARRAY_DIFF_OP.ADD: {
         if (parentDomElement instanceof HTMLElement) {
-          mountHostComponent(item, parentDomElement, index);
+          mountDOM(item, parentDomElement, index + offset, parentFiber);
         }
         break;
       }
@@ -238,7 +252,7 @@ function patchChildren(oldVNode: VNode, newVNode: VNode) {
       case ARRAY_DIFF_OP.MOVE: {
         if (parentDomElement instanceof HTMLElement) {
           if ("originalIndex" in operation) {
-            const oldChild = oldChildren[operation.originalIndex];
+            const oldChild = oldChildren[operation.originalIndex + offset];
             const newChild = newChildren[index];
 
             if (!oldChild.domElement) {
@@ -255,7 +269,7 @@ function patchChildren(oldVNode: VNode, newVNode: VNode) {
               domElement,
               domElementAtTargetPosition
             );
-            patchDOM(oldChild, newChild, parentDomElement);
+            patchDOM(oldChild, newChild, parentDomElement, parentFiber);
           }
         }
         break;
@@ -266,7 +280,8 @@ function patchChildren(oldVNode: VNode, newVNode: VNode) {
             patchDOM(
               oldChildren[operation.originalIndex],
               newChildren[index],
-              parentDomElement
+              parentDomElement,
+              parentFiber
             );
           }
         }

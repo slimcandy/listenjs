@@ -1,21 +1,38 @@
+import { Fiber } from "./fiber";
+
 function attachEventListener(
   eventType: string,
   handler: EventListener,
-  domElement: HTMLElement
+  domElement: HTMLElement,
+  parentFiber: Fiber | null = null
 ) {
-  domElement.addEventListener(eventType, handler);
+  function boundHandler(event: Event) {
+    if (parentFiber) {
+      handler.apply(parentFiber);
+    } else {
+      handler(event);
+    }
+  }
 
-  return handler;
+  domElement.addEventListener(eventType, boundHandler);
+
+  return boundHandler;
 }
 
 function attachEventListeners(
   listeners: Record<string, EventListener> = {},
-  domElement: HTMLElement
+  domElement: HTMLElement,
+  parentFiber: Fiber | null = null
 ) {
   const attachedListeners: Record<string, EventListener> = {};
 
   Object.entries(listeners).forEach(([eventType, handler]) => {
-    const listener = attachEventListener(eventType, handler, domElement);
+    const listener = attachEventListener(
+      eventType,
+      handler,
+      domElement,
+      parentFiber
+    );
     attachedListeners[eventType] = listener;
   });
 

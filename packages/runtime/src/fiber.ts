@@ -1,15 +1,33 @@
 import { destroyDOM } from "./destroy-dom";
-import { mountHostComponent } from "./mount-host-component";
-import { VNode } from "./types";
+import { extractChildren, mountDOM } from "./mount-dom";
+import { patchDOM } from "./patch-dom";
+import { VDOMType, VNode } from "./types";
+import { hasOwnProperty } from "./utils/objects";
+
+export interface Fiber {
+  props: object;
+  state: object;
+
+  readonly elements: (HTMLElement | Text | undefined)[];
+  readonly firstElement: HTMLElement | Text | undefined;
+  readonly offset: number;
+
+  render(): VNode;
+  updateState(state: object): void;
+  mount(hostDOMElement: HTMLElement, positionIndex?: number | null): void;
+  unmount(): void;
+}
 
 function createFiber({
   render,
   state,
+  methods,
 }: {
   render: () => VNode;
   state: (props?: object) => object;
+  methods: Record<string, () => void>[];
 }) {
-  class Fiber {
+  class Fiber implements Fiber {
     #isMounted = false;
     #vNode: VNode | null;
     #domElement: HTMLElement | null;
@@ -22,15 +40,51 @@ function createFiber({
       this.state = state ? state(props) : {};
     }
 
+    get elements() {
+      if (this.#vNode == null) {
+        return [];
+      }
+
+      if (this.#vNode.type === VDOMType.FRAGMENT) {
+        return extractChildren(this.#vNode).map((child) => child.domElement);
+      }
+
+      return [this.#vNode.domElement];
+    }
+
+    get firstElement() {
+      return this.elements[0];
+    }
+
+    get offset() {
+      if (
+        this.#domElement &&
+        this.firstElement &&
+        this.#vNode?.type === VDOMType.FRAGMENT
+      ) {
+        return Array.from(this.#domElement?.childNodes).indexOf(
+          this.firstElement
+        );
+      }
+
+      return 0;
+    }
+
     render() {
-      return render();
+      return render.call(this);
+    }
+
+    updateState(state: object) {
+      this.state = { ...this.state, ...state };
+      this.#patch();
     }
 
     mount(hostDOMElement: HTMLElement, positionIndex: number | null = null) {
       if (this.#isMounted) throw new Error("Fiber is already mounted");
 
       this.#vNode = this.render();
-      mountHostComponent(this.#vNode, hostDOMElement, positionIndex);
+      if (this.#vNode)
+        mountDOM(this.#vNode, hostDOMElement, positionIndex, this);
       this.#domElement = hostDOMElement;
       this.#isMounted = true;
     }
@@ -43,6 +97,24 @@ function createFiber({
       this.#domElement = null;
       this.#isMounted = false;
     }
+
+    #patch() {
+      if (!this.#isMounted) {
+        throw new Error("Fiber is not mounted");
+      }
+
+      const nextVNode = this.render();
+      if (this.#vNode && this.#domElement)
+        this.#vNode = patchDOM(this.#vNode, nextVNode, this.#domElement, this);
+    }
+  }
+
+  for (const methodName in methods) {
+    if (hasOwnProperty(Fiber, methodName)) {
+      throw new Error(`Method ${methodName} already exists in the component.`);
+    }
+
+    Fiber.prototype[methodName] = methods[methodName];
   }
 
   return Fiber;
