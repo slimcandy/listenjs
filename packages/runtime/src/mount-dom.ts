@@ -9,6 +9,7 @@ import {
   Props,
   TextVNode,
   VNode,
+  FiberVNode,
 } from "./types";
 
 function mountDOM(
@@ -24,20 +25,38 @@ function mountDOM(
 
   switch (vNode.type) {
     case VDOMType.TEXT:
-      createTextInstance(vNode, parentDOMNode, positionIndex);
+      createDOMElementFromTextNode(vNode, parentDOMNode, positionIndex);
       break;
     case VDOMType.ELEMENT:
-      createInstance(vNode, parentDOMNode, positionIndex, parentFiber);
+      createDOMElementFromElementNode(
+        vNode,
+        parentDOMNode,
+        positionIndex,
+        parentFiber
+      );
       break;
     case VDOMType.FRAGMENT:
-      createFragmentInstance(vNode, parentDOMNode, positionIndex, parentFiber);
+      createDOMElementFromFragmentNode(
+        vNode,
+        parentDOMNode,
+        positionIndex,
+        parentFiber
+      );
+      break;
+    case VDOMType.FIBER:
+      createDOMElementFromFiberNode(
+        vNode,
+        parentDOMNode,
+        positionIndex,
+        parentFiber
+      );
       break;
     default:
       throw new Error(`Unknown vNode type`);
   }
 }
 
-function createTextInstance(
+function createDOMElementFromTextNode(
   vNode: TextVNode,
   parentDOMNode: HTMLElement,
   positionIndex: number | null
@@ -49,7 +68,7 @@ function createTextInstance(
   insertIntoDOM(domTextNode, parentDOMNode, positionIndex);
 }
 
-function createFragmentInstance(
+function createDOMElementFromFragmentNode(
   vNode: FragmentVNode,
   parentDOMNode: HTMLElement,
   positionIndex: number | null,
@@ -68,7 +87,7 @@ function createFragmentInstance(
   });
 }
 
-function createInstance(
+function createDOMElementFromElementNode(
   vNode: ElementVNode,
   parentDOMNode: HTMLElement,
   positionIndex: number | null,
@@ -85,6 +104,17 @@ function createInstance(
   });
 
   return insertIntoDOM(domElement, parentDOMNode, positionIndex);
+}
+
+function createDOMElementFromFiberNode(
+  vNode: FiberVNode,
+  parentDOMNode: HTMLElement,
+  positionIndex: number | null,
+  parentFiber: Fiber | null = null
+) {
+  const FiberConstructor = vNode.tag;
+  const props = vNode.props;
+  const fiberInstance = new FiberConstructor(props);
 }
 
 function setInitialProperties(

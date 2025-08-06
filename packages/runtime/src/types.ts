@@ -1,7 +1,10 @@
+import { Fiber } from "./fiber";
+
 enum VDOMType {
   TEXT = Node.TEXT_NODE,
   ELEMENT = Node.ELEMENT_NODE,
   FRAGMENT = Node.DOCUMENT_FRAGMENT_NODE,
+  FIBER = "FIBER",
 }
 
 enum ARRAY_DIFF_OP {
@@ -28,13 +31,21 @@ interface TextVNode {
   domElement?: Text;
 }
 
-interface ElementVNode {
-  type: VDOMType.ELEMENT;
-  tag: string;
+interface BaseNode {
   props: Props;
   children: VNode[];
   domElement?: HTMLElement;
   listeners?: Record<string, EventListener>;
+}
+
+interface FiberVNode extends BaseNode {
+  type: VDOMType.FIBER;
+  tag: Fiber;
+}
+
+interface ElementVNode extends BaseNode {
+  type: VDOMType.ELEMENT;
+  tag: string;
 }
 
 interface FragmentVNode {
@@ -43,7 +54,7 @@ interface FragmentVNode {
   domElement?: HTMLElement; // Parent node for fragment
 }
 
-type VNode = TextVNode | ElementVNode | FragmentVNode;
+type VNode = TextVNode | ElementVNode | FiberVNode | FragmentVNode;
 type VNodeChild = string | VNode; // Acceptable child types
 type DomElement = Text | HTMLElement;
 
@@ -51,6 +62,7 @@ export {
   VDOMType,
   ARRAY_DIFF_OP,
   ElementVNode,
+  FiberVNode,
   VNode,
   VNodeChild,
   FragmentVNode,

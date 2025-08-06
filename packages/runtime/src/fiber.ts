@@ -4,20 +4,6 @@ import { patchDOM } from "./patch-dom";
 import { VDOMType, VNode } from "./types";
 import { hasOwnProperty } from "./utils/objects";
 
-export interface Fiber {
-  props: object;
-  state: object;
-
-  readonly elements: (HTMLElement | Text | undefined)[];
-  readonly firstElement: HTMLElement | Text | undefined;
-  readonly offset: number;
-
-  render(): VNode;
-  updateState(state: object): void;
-  mount(hostDOMElement: HTMLElement, positionIndex?: number | null): void;
-  unmount(): void;
-}
-
 function createFiber({
   render,
   state,
@@ -27,7 +13,7 @@ function createFiber({
   state: (props?: object) => object;
   methods: Record<string, () => void>[];
 }) {
-  class Fiber implements Fiber {
+  class Fiber {
     #isMounted = false;
     #vNode: VNode | null;
     #domElement: HTMLElement | null;
@@ -46,7 +32,12 @@ function createFiber({
       }
 
       if (this.#vNode.type === VDOMType.FRAGMENT) {
-        return extractChildren(this.#vNode).map((child) => child.domElement);
+        return extractChildren(this.#vNode).flatMap((child) => {
+          if (child.type === VDOMType.FIBER) {
+            return child.tag.elements;
+          }
+          return [child.domElement];
+        });
       }
 
       return [this.#vNode.domElement];
@@ -119,5 +110,11 @@ function createFiber({
 
   return Fiber;
 }
+
+// export type FiberClass = ReturnType<typeof createFiber>;
+// export type FiberInstance = InstanceType<FiberClass>;
+//
+
+export type Fiber = ReturnType<typeof createFiber>;
 
 export default createFiber;
