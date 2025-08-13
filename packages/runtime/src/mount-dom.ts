@@ -1,5 +1,5 @@
 import { attachEventListeners } from "./events";
-import { Fiber } from "./fiber";
+import { FiberInstance } from "./fiber";
 import { setProp } from "./set-prop";
 import {
   VDOMType,
@@ -14,41 +14,41 @@ import {
 
 function mountDOM(
   vNode: VNode,
-  parentDOMNode: HTMLElement,
+  parentDOMElement: HTMLElement,
   positionIndex: number | null = null,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
-  if (parentDOMNode == undefined) {
+  if (parentDOMElement == undefined) {
     throw new Error(`
-      "Parent element is not defined: ${parentDOMNode}`);
+      "Parent element is not defined: ${parentDOMElement}`);
   }
 
   switch (vNode.type) {
     case VDOMType.TEXT:
-      createDOMElementFromTextNode(vNode, parentDOMNode, positionIndex);
+      createDOMElementFromTextNode(vNode, parentDOMElement, positionIndex);
       break;
     case VDOMType.ELEMENT:
       createDOMElementFromElementNode(
         vNode,
-        parentDOMNode,
+        parentDOMElement,
         positionIndex,
-        parentFiber
+        parentFiberInstance
       );
       break;
     case VDOMType.FRAGMENT:
       createDOMElementFromFragmentNode(
         vNode,
-        parentDOMNode,
+        parentDOMElement,
         positionIndex,
-        parentFiber
+        parentFiberInstance
       );
       break;
     case VDOMType.FIBER:
       createDOMElementFromFiberNode(
         vNode,
-        parentDOMNode,
+        parentDOMElement,
         positionIndex,
-        parentFiber
+        parentFiberInstance
       );
       break;
     default:
@@ -58,86 +58,94 @@ function mountDOM(
 
 function createDOMElementFromTextNode(
   vNode: TextVNode,
-  parentDOMNode: HTMLElement,
+  parentDOMElement: HTMLElement,
   positionIndex: number | null
 ) {
   const { value } = vNode;
   const domTextNode = document.createTextNode(value);
   vNode.domElement = domTextNode;
 
-  insertIntoDOM(domTextNode, parentDOMNode, positionIndex);
+  insertIntoDOM(domTextNode, parentDOMElement, positionIndex);
 }
 
 function createDOMElementFromFragmentNode(
   vNode: FragmentVNode,
-  parentDOMNode: HTMLElement,
+  parentDOMElement: HTMLElement,
   positionIndex: number | null,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
   const { children } = vNode;
-  vNode.domElement = parentDOMNode;
+  vNode.domElement = parentDOMElement;
 
   children.forEach((child, index) => {
     mountDOM(
       child,
-      parentDOMNode,
+      parentDOMElement,
       positionIndex ? positionIndex + index : null,
-      parentFiber
+      parentFiberInstance
     );
   });
 }
 
 function createDOMElementFromElementNode(
   vNode: ElementVNode,
-  parentDOMNode: HTMLElement,
+  parentDOMElement: HTMLElement,
   positionIndex: number | null,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
   const { tag, props, children } = vNode;
 
   const domElement = document.createElement(tag);
-  setInitialProperties(domElement, props, vNode, parentFiber);
+  setInitialProperties(domElement, props, vNode, parentFiberInstance);
   vNode.domElement = domElement;
 
   children.forEach((child) => {
-    mountDOM(child, domElement, null, parentFiber);
+    mountDOM(child, domElement, null, parentFiberInstance);
   });
 
-  return insertIntoDOM(domElement, parentDOMNode, positionIndex);
+  return insertIntoDOM(domElement, parentDOMElement, positionIndex);
 }
 
 function createDOMElementFromFiberNode(
   vNode: FiberVNode,
-  parentDOMNode: HTMLElement,
+  parentDOMElement: HTMLElement,
   positionIndex: number | null,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
-  const FiberConstructor = vNode.tag;
+  const FiberClass = vNode.tag;
   const props = vNode.props;
-  const fiberInstance = new FiberConstructor(props);
+  const fiberInstance = new FiberClass(props);
+
+  fiberInstance.mount(parentDOMElement, positionIndex);
+  vNode.fiberInstance = fiberInstance;
+  vNode.domElement = fiberInstance.firstDOMElement;
 }
 
 function setInitialProperties(
   domElement: HTMLElement,
   props: Props,
   vNode: ElementVNode,
-  parentFiber: Fiber | null
+  parentFiberInstance: FiberInstance | null
 ) {
   const { on: events, ...attrs } = props;
 
   if (events) {
-    vNode.listeners = attachEventListeners(events, domElement, parentFiber);
+    vNode.listeners = attachEventListeners(
+      events,
+      domElement,
+      parentFiberInstance
+    );
   }
   setProp(domElement, attrs);
 }
 
 function insertIntoDOM(
   domElement: DomElement,
-  parentDOMNode: Node,
+  parentDOMElement: Node,
   positionIndex: number | null
 ) {
   if (positionIndex == null) {
-    return parentDOMNode.appendChild(domElement);
+    return parentDOMElement.appendChild(domElement);
   }
 
   if (positionIndex < 0) {
@@ -146,12 +154,12 @@ function insertIntoDOM(
     );
   }
 
-  const children = parentDOMNode.childNodes;
+  const children = parentDOMElement.childNodes;
 
   if (positionIndex >= children.length) {
-    parentDOMNode.appendChild(domElement);
+    parentDOMElement.appendChild(domElement);
   } else {
-    parentDOMNode.insertBefore(domElement, children[positionIndex]);
+    parentDOMElement.insertBefore(domElement, children[positionIndex]);
   }
 }
 

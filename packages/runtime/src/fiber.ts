@@ -26,7 +26,7 @@ function createFiber({
       this.state = state ? state(props) : {};
     }
 
-    get elements() {
+    get domElements() {
       if (this.#vNode == null) {
         return [];
       }
@@ -34,27 +34,27 @@ function createFiber({
       if (this.#vNode.type === VDOMType.FRAGMENT) {
         return extractChildren(this.#vNode).flatMap((child) => {
           if (child.type === VDOMType.FIBER) {
-            return child.tag.elements;
+            return child.fiberInstance.domElements;
           }
-          return [child.domElement];
+          return child.domElement ? [child.domElement] : [];
         });
       }
 
-      return [this.#vNode.domElement];
+      return this.#vNode.domElement ? [this.#vNode.domElement] : [];
     }
 
-    get firstElement() {
-      return this.elements[0];
+    get firstDOMElement() {
+      return this.domElements[0];
     }
 
     get offset() {
       if (
         this.#domElement &&
-        this.firstElement &&
+        this.firstDOMElement &&
         this.#vNode?.type === VDOMType.FRAGMENT
       ) {
         return Array.from(this.#domElement?.childNodes).indexOf(
-          this.firstElement
+          this.firstDOMElement
         );
       }
 
@@ -111,10 +111,7 @@ function createFiber({
   return Fiber;
 }
 
-// export type FiberClass = ReturnType<typeof createFiber>;
-// export type FiberInstance = InstanceType<FiberClass>;
-//
-
-export type Fiber = ReturnType<typeof createFiber>;
+export type FiberClass = ReturnType<typeof createFiber>;
+export type FiberInstance = InstanceType<FiberClass>;
 
 export default createFiber;

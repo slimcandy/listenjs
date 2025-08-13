@@ -1,14 +1,14 @@
-import { Fiber } from "./fiber";
+import { FiberInstance } from "./fiber";
 
 function attachEventListener(
   eventType: string,
   handler: EventListener,
   domElement: HTMLElement,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
   function boundHandler(event: Event) {
-    if (parentFiber) {
-      handler.apply(parentFiber);
+    if (parentFiberInstance) {
+      handler.apply(parentFiberInstance);
     } else {
       handler(event);
     }
@@ -22,7 +22,7 @@ function attachEventListener(
 function attachEventListeners(
   listeners: Record<string, EventListener> = {},
   domElement: HTMLElement,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
   const attachedListeners: Record<string, EventListener> = {};
 
@@ -31,7 +31,7 @@ function attachEventListeners(
       eventType,
       handler,
       domElement,
-      parentFiber
+      parentFiberInstance
     );
     attachedListeners[eventType] = listener;
   });

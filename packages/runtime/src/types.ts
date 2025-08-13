@@ -1,4 +1,4 @@
-import { Fiber } from "./fiber";
+import { FiberClass, FiberInstance } from "./fiber";
 
 enum VDOMType {
   TEXT = Node.TEXT_NODE,
@@ -40,7 +40,8 @@ interface BaseNode {
 
 interface FiberVNode extends BaseNode {
   type: VDOMType.FIBER;
-  tag: Fiber;
+  tag: FiberClass;
+  fiberInstance: FiberInstance;
 }
 
 interface ElementVNode extends BaseNode {

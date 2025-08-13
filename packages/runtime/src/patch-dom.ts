@@ -21,13 +21,13 @@ import {
 import { arraysDiff, arraysDiffSequence } from "./utils/arrays";
 import { objectsDiff } from "./utils/objects";
 import { isNotBlankOrEmptyString } from "./utils/strings";
-import { Fiber } from "./fiber";
+import { FiberInstance } from "./fiber";
 
 function patchDOM(
   oldVNode: VNode,
   newVNode: VNode,
   parentDOMNode: HTMLElement,
-  parentFiber: Fiber | null = null
+  parentFiberInstance: FiberInstance | null = null
 ) {
   if (!areVNodesEqual(oldVNode, newVNode)) {
     const positionIndex = oldVNode.domElement
@@ -35,7 +35,7 @@ function patchDOM(
       : undefined;
 
     destroyDOM(oldVNode);
-    mountDOM(newVNode, parentDOMNode, positionIndex, parentFiber);
+    mountDOM(newVNode, parentDOMNode, positionIndex, parentFiberInstance);
 
     return newVNode;
   }
@@ -53,13 +53,13 @@ function patchDOM(
 
     case VDOMType.ELEMENT: {
       if (oldVNode.type === VDOMType.ELEMENT) {
-        patchElement(oldVNode, newVNode, parentFiber);
+        patchElement(oldVNode, newVNode, parentFiberInstance);
       }
       break;
     }
   }
 
-  patchChildren(oldVNode, newVNode, parentFiber);
+  patchChildren(oldVNode, newVNode, parentFiberInstance);
 
   return newVNode;
 }
@@ -96,7 +96,7 @@ function patchText(oldVNode: TextVNode, newVNode: TextVNode) {
 function patchElement(
   oldVNode: ElementVNode,
   newVNode: ElementVNode,
-  parentFiber: Fiber | null = null
+  parentFiber: FiberInstance | null = null
 ) {
   if (!oldVNode.domElement) {
     throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
@@ -192,7 +192,7 @@ function patchElement(
     oldListeners: ElementVNode["listeners"] = {},
     oldOnEvents: Props["on"] = {},
     newOnEvents: Props["on"] = {},
-    parentFiber: Fiber | null = null
+    parentFiber: FiberInstance | null = null
   ) {
     const { added, removed, updated } = objectsDiff(oldOnEvents, newOnEvents);
 
@@ -218,7 +218,7 @@ function patchElement(
 function patchChildren(
   oldVNode: VNode,
   newVNode: VNode,
-  parentFiber: Fiber | null = null
+  parentFiber: FiberInstance | null = null
 ) {
   if (!oldVNode.domElement) {
     throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);

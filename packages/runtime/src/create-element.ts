@@ -1,4 +1,4 @@
-import { Fiber } from "./fiber";
+import { FiberClass } from "./fiber";
 import {
   VDOMType,
   ElementVNode,
@@ -11,7 +11,7 @@ import {
 import { withoutNulls } from "./utils/arrays";
 
 function createElement(
-  tag: string | Fiber,
+  tag: string | FiberClass,
   props: Props = {},
   children: VNodeChild[] = []
 ): ElementVNode | FiberVNode {
