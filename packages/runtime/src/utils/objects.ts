@@ -1,13 +1,15 @@
+import type { DomEventMap, DOMEventName } from "../types";
+
 function objectsDiff(
-  oldObject: object,
-  newObject: object
+  oldObject: DomEventMap,
+  newObject: DomEventMap
 ): {
-  added: string[];
-  removed: string[];
-  updated: string[];
+  added: DOMEventName[];
+  removed: DOMEventName[];
+  updated: DOMEventName[];
 } {
-  const oldKeys = Object.keys(oldObject);
-  const newKeys = Object.keys(newObject);
+  const oldKeys = Object.keys(oldObject) as DOMEventName[];
+  const newKeys = Object.keys(newObject) as DOMEventName[];
 
   return {
     added: newKeys.filter((newKey) => !(newKey in oldObject)),

@@ -1,51 +1,62 @@
-import { FiberInstance } from "./fiber";
+import type { FiberInstance } from "./fiber";
+import type { DomEventMap, DOMEventName, DOMEmitGenerator } from "./types";
+
+type DOMEventWithContext = (event: Event) => void;
+type DOMEventListener = Partial<Record<DOMEventName, DOMEventWithContext>>;
 
 function attachEventListener(
-  eventType: string,
-  handler: EventListener,
+  domEventName: DOMEventName,
+  emitGenerator: DOMEmitGenerator,
   domElement: HTMLElement,
   parentFiberInstance: FiberInstance | null = null
 ) {
-  function boundHandler(event: Event) {
+  function boundContextToDOMEvent(...args: [Event]) {
     if (parentFiberInstance) {
-      handler.apply(parentFiberInstance);
+      emitGenerator.apply(parentFiberInstance, args);
     } else {
-      handler(event);
+      emitGenerator(...args);
     }
   }
 
-  domElement.addEventListener(eventType, boundHandler);
+  domElement.addEventListener(domEventName, boundContextToDOMEvent);
 
-  return boundHandler;
+  return boundContextToDOMEvent;
 }
 
 function attachEventListeners(
-  listeners: Record<string, EventListener> = {},
+  domEventMap: DomEventMap = {},
   domElement: HTMLElement,
   parentFiberInstance: FiberInstance | null = null
-) {
-  const attachedListeners: Record<string, EventListener> = {};
+): DOMEventListener {
+  const attachedDOMEventListeners: DOMEventListener = {};
 
-  Object.entries(listeners).forEach(([eventType, handler]) => {
+  Object.entries(domEventMap).forEach(([domEventName, emitGenerator]) => {
     const listener = attachEventListener(
-      eventType,
-      handler,
+      domEventName as DOMEventName,
+      emitGenerator,
       domElement,
       parentFiberInstance
     );
-    attachedListeners[eventType] = listener;
+    attachedDOMEventListeners[domEventName] = listener;
   });
 
-  return attachedListeners;
+  return attachedDOMEventListeners;
 }
 
 function removeEventListeners(
-  listeners: Record<string, EventListener> = {},
+  attachedDOMEventListeners: DOMEventListener = {},
   domElement: HTMLElement
 ) {
-  Object.entries(listeners).forEach(([eventType, handler]) => {
-    domElement.removeEventListener(eventType, handler);
-  });
+  Object.entries(attachedDOMEventListeners).forEach(
+    ([domEventName, domEventWithContext]) => {
+      domElement.removeEventListener(domEventName, domEventWithContext);
+    }
+  );
 }
 
-export { attachEventListener, attachEventListeners, removeEventListeners };
+export {
+  attachEventListener,
+  attachEventListeners,
+  removeEventListeners,
+  type DOMEventListener,
+};

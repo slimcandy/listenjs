@@ -1,6 +1,5 @@
 import { destroyDOM } from "./destroy-dom";
 import { attachEventListener } from "./events";
-import { areVNodesEqual } from "./vnode-equal";
 import { extractChildren, mountDOM } from "./mount-dom";
 import {
   removeStyle,
@@ -10,18 +9,23 @@ import {
 } from "./set-prop";
 import {
   ARRAY_DIFF_OP,
-  Attributes,
-  DomElement,
-  VDOMType,
-  ElementVNode,
-  Props,
-  TextVNode,
-  VNode,
+  VDOMType
 } from "./types";
 import { arraysDiff, arraysDiffSequence } from "./utils/arrays";
 import { objectsDiff } from "./utils/objects";
+import { extractPropsAndEvents } from "./utils/props";
 import { isNotBlankOrEmptyString } from "./utils/strings";
-import { FiberInstance } from "./fiber";
+import { areVNodesEqual } from "./vnode-equal";
+
+import type { FiberInstance } from "./fiber";
+import type {
+  Attributes,
+  DomElement,
+  ElementVNode,
+  TextVNode,
+  VNode,
+  FiberVNode,
+  DOMProps} from "./types";
 
 function patchDOM(
   oldVNode: VNode,
@@ -54,6 +58,13 @@ function patchDOM(
     case VDOMType.ELEMENT: {
       if (oldVNode.type === VDOMType.ELEMENT) {
         patchElement(oldVNode, newVNode, parentFiberInstance);
+      }
+      break;
+    }
+
+    case VDOMType.FIBER: {
+      if (oldVNode.type === VDOMType.FIBER) {
+        patchFiber(oldVNode, newVNode);
       }
       break;
     }
@@ -149,8 +160,8 @@ function patchElement(
 
   function patchClasses(
     domElement: HTMLElement,
-    oldClass: Props["class"],
-    newClass: Props["class"]
+    oldClass: DOMProps["class"],
+    newClass: DOMProps["class"]
   ) {
     const oldClasses = toClassList(oldClass);
     const newClasses = toClassList(newClass);
@@ -164,7 +175,7 @@ function patchElement(
       domElement.classList.add(...added);
     }
 
-    function toClassList(classes: Props["class"] = "") {
+    function toClassList(classes: DOMProps["class"] = "") {
       return Array.isArray(classes)
         ? classes.filter(isNotBlankOrEmptyString)
         : classes.split(/(\s+)/).filter(isNotBlankOrEmptyString);
@@ -173,8 +184,8 @@ function patchElement(
 
   function patchStyles(
     domElement: HTMLElement,
-    oldStyle: Props["style"] = {},
-    newStyle: Props["style"] = {}
+    oldStyle: DOMProps["style"] = {},
+    newStyle: DOMProps["style"] = {}
   ) {
     const { added, removed, updated } = objectsDiff(oldStyle, newStyle);
 
@@ -190,29 +201,46 @@ function patchElement(
   function patchEvents(
     domElement: HTMLElement,
     oldListeners: ElementVNode["listeners"] = {},
-    oldOnEvents: Props["on"] = {},
-    newOnEvents: Props["on"] = {},
+    oldOnEvents: DOMProps["on"] = {},
+    newOnEvents: DOMProps["on"] = {},
     parentFiber: FiberInstance | null = null
   ) {
     const { added, removed, updated } = objectsDiff(oldOnEvents, newOnEvents);
 
-    for (const eventType of removed.concat(updated)) {
-      domElement.removeEventListener(eventType, oldListeners[eventType]);
+    for (const domEventName of removed.concat(updated)) {
+      if (oldListeners[domEventName]) {
+        domElement.removeEventListener(
+          domEventName,
+          oldListeners[domEventName]
+        );
+      }
     }
 
     const addedListeners: ElementVNode["listeners"] = {};
 
     for (const eventType of added.concat(updated)) {
-      addedListeners[eventType] = attachEventListener(
-        eventType,
-        newOnEvents[eventType],
-        domElement,
-        parentFiber
-      );
+      if (newOnEvents[eventType]) {
+        addedListeners[eventType] = attachEventListener(
+          eventType,
+          newOnEvents[eventType],
+          domElement,
+          parentFiber
+        );
+      }
     }
 
     return addedListeners;
   }
+}
+
+function patchFiber(oldVNode: FiberVNode, newVNode: FiberVNode) {
+  const { fiberInstance: oldFiberInstance } = oldVNode;
+  const { props: newProps } = extractPropsAndEvents(newVNode);
+
+  oldFiberInstance.updateProps(newProps);
+
+  newVNode.fiberInstance = oldFiberInstance;
+  newVNode.domElement = oldFiberInstance.firstDOMElement;
 }
 
 function patchChildren(

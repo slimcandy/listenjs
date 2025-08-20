@@ -1,18 +1,21 @@
-import { FiberClass } from "./fiber";
 import {
-  VDOMType,
-  ElementVNode,
-  VNode,
-  VNodeChild,
-  Props,
-  TextVNode,
-  FiberVNode,
+  VDOMType
 } from "./types";
 import { withoutNulls } from "./utils/arrays";
 
+import type { FiberClass } from "./fiber";
+import type {
+  ElementVNode,
+  VNode,
+  VNodeChild,
+  TextVNode,
+  FiberVNode,
+  DOMProps,
+  FiberProps} from "./types";
+
 function createElement(
   tag: string | FiberClass,
-  props: Props = {},
+  props: DOMProps | FiberProps = {},
   children: VNodeChild[] = []
 ): ElementVNode | FiberVNode {
   if (typeof tag === "string") {

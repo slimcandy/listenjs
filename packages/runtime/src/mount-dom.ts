@@ -1,16 +1,19 @@
 import { attachEventListeners } from "./events";
-import { FiberInstance } from "./fiber";
 import { setProp } from "./set-prop";
 import {
-  VDOMType,
+  VDOMType
+} from "./types";
+import { extractPropsAndEvents } from "./utils/props";
+
+import type { FiberInstance } from "./fiber";
+import type {
   DomElement,
   ElementVNode,
   FragmentVNode,
-  Props,
   TextVNode,
   VNode,
   FiberVNode,
-} from "./types";
+  FiberEventMap} from "./types";
 
 function mountDOM(
   vNode: VNode,
@@ -93,10 +96,10 @@ function createDOMElementFromElementNode(
   positionIndex: number | null,
   parentFiberInstance: FiberInstance | null = null
 ) {
-  const { tag, props, children } = vNode;
+  const { tag, children } = vNode;
 
   const domElement = document.createElement(tag);
-  setInitialProperties(domElement, props, vNode, parentFiberInstance);
+  setInitialProperties(domElement, vNode, parentFiberInstance);
   vNode.domElement = domElement;
 
   children.forEach((child) => {
@@ -113,8 +116,12 @@ function createDOMElementFromFiberNode(
   parentFiberInstance: FiberInstance | null = null
 ) {
   const FiberClass = vNode.tag;
-  const props = vNode.props;
-  const fiberInstance = new FiberClass(props);
+  const { eventMap: fiberEventMap, props } = extractPropsAndEvents(vNode);
+  const fiberInstance = new FiberClass(
+    props,
+    fiberEventMap as FiberEventMap,
+    parentFiberInstance
+  );
 
   fiberInstance.mount(parentDOMElement, positionIndex);
   vNode.fiberInstance = fiberInstance;
@@ -123,20 +130,19 @@ function createDOMElementFromFiberNode(
 
 function setInitialProperties(
   domElement: HTMLElement,
-  props: Props,
   vNode: ElementVNode,
   parentFiberInstance: FiberInstance | null
 ) {
-  const { on: events, ...attrs } = props;
+  const { eventMap, props } = extractPropsAndEvents(vNode);
 
-  if (events) {
+  if (eventMap) {
     vNode.listeners = attachEventListeners(
-      events,
+      eventMap,
       domElement,
       parentFiberInstance
     );
   }
-  setProp(domElement, attrs);
+  setProp(domElement, props);
 }
 
 function insertIntoDOM(

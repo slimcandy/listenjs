@@ -1,45 +1,60 @@
-type VoidFunction = (payload?: object) => void;
+type ActionName = string;
+type ActionPayload = string | number | object;
+type ReducerWithInjectedState = (payload?: ActionPayload) => void;
+
+type AfterCommandHandler = () => void;
+type UnsubscribeFunction = () => void;
 
 class Dispatcher {
-  #subs: Map<string, VoidFunction[]> = new Map();
-  #afterHandlers: VoidFunction[] = [];
+  #actionSubscriptions: Map<string, ReducerWithInjectedState[]> = new Map();
+  #afterHandlers: AfterCommandHandler[] = [];
 
-  subscribe(commandName: string, handler: VoidFunction) {
-    if (!this.#subs.has(commandName)) {
-      this.#subs.set(commandName, []);
+  subscribe(
+    actionName: ActionName,
+    reducerWithInjectedState: ReducerWithInjectedState
+  ): UnsubscribeFunction {
+    if (!this.#actionSubscriptions.has(actionName)) {
+      this.#actionSubscriptions.set(actionName, []);
     }
 
-    const handlers = this.#subs.get(commandName);
-    if (handlers?.includes(handler)) {
+    const reducers = this.#actionSubscriptions.get(actionName);
+    if (reducers?.includes(reducerWithInjectedState)) {
       return () => {};
     }
-    handlers?.push(handler);
+    reducers?.push(reducerWithInjectedState);
 
-    return () => {
-      if (handlers) {
-        const index = handlers?.indexOf(handler);
-        handlers?.splice(index, 1);
+    return function unsubscribe() {
+      if (reducers) {
+        const index = reducers?.indexOf(reducerWithInjectedState);
+        reducers?.splice(index, 1);
       }
     };
   }
 
-  afterEveryCommand(handler: VoidFunction) {
-    this.#afterHandlers.push(handler);
+  afterEveryCommand(afterHandler: AfterCommandHandler) {
+    this.#afterHandlers.push(afterHandler);
     return () => {
-      const index = this.#afterHandlers.indexOf(handler);
+      const index = this.#afterHandlers.indexOf(afterHandler);
       this.#afterHandlers.splice(index, 1);
     };
   }
 
-  dispatch(commandName: string, payload: object) {
-    if (this.#subs.has(commandName)) {
-      this.#subs.get(commandName)?.forEach((handler) => handler(payload));
+  dispatch(actionName: ActionName, actionPayload?: ActionPayload) {
+    if (this.#actionSubscriptions.has(actionName)) {
+      this.#actionSubscriptions
+        .get(actionName)
+        ?.forEach((reducer) => reducer(actionPayload));
     } else {
-      console.warn(`No handlers found for command: ${commandName}`);
+      console.warn(`No handlers found for command: ${actionName}`);
     }
 
-    this.#afterHandlers.forEach((handler) => handler());
+    this.#afterHandlers.forEach((afterHandler) => afterHandler());
   }
 }
 
-export { Dispatcher };
+export {
+  Dispatcher,
+  type ActionName,
+  type ActionPayload,
+  type UnsubscribeFunction,
+};

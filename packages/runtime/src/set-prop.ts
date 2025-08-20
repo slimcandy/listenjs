@@ -1,7 +1,7 @@
-import { Props } from "./types";
+import type { DOMProps, FiberProps } from "./types";
 
-function setProp(domElement: HTMLElement, attrs: Props) {
-  const { class: className, style, ...restAttrs } = attrs;
+function setProp(domElement: HTMLElement, props: DOMProps | FiberProps) {
+  const { class: className, style, ...restAttrs } = props;
 
   if (typeof className === "string" || Array.isArray(className)) {
     setClass(domElement, className);
