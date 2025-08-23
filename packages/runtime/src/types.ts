@@ -1,5 +1,4 @@
-import type { Emit } from "./create-app";
-import type { ActionPayload } from "./dispatcher";
+import type { ActionName, ActionPayload } from "./dispatcher";
 import type { DOMEventListener } from "./events";
 import type { FiberClass, FiberInstance } from "./fiber";
 
@@ -83,6 +82,14 @@ type VNode = TextVNode | ElementVNode | FiberVNode | FragmentVNode;
 type VNodeChild = string | VNode; // Acceptable child types
 type DomElement = Text | HTMLElement;
 
+type State = Record<string, string | number | object>;
+type View = (state: State, emit: Emit) => VNode;
+
+type Reducer = (state: State, actionPayload?: ActionPayload) => State;
+type Reducers = Record<ActionName, Reducer>;
+
+type Emit = (actionName: ActionName, actionPayload?: ActionPayload) => void;
+
 export {
   VDOMType,
   ARRAY_DIFF_OP,
@@ -102,4 +109,6 @@ export {
   type DomEventMap,
   type DOMEventName,
   type DOMEmitGenerator,
+  type View,
+  type Reducers,
 };

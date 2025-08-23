@@ -1,75 +1,52 @@
+import { createElement } from "./create-element";
 import { destroyDOM } from "./destroy-dom";
-import { Dispatcher } from "./dispatcher";
 import { mountDOM } from "./mount-dom";
-import { patchDOM } from "./patch-dom";
 
-import type { ActionName, ActionPayload} from "./dispatcher";
-import type { VNode } from "./types";
+import type { FiberClass } from "./fiber";
+import type { DOMProps, FiberProps, VNode } from "./types";
 
-type State = Record<string, string | number | object>;
-type View = (state: State, emit: Emit) => VNode;
+function createApp(
+  RootComponent: string | FiberClass,
+  props: DOMProps | FiberProps = {}
+) {
+  let parentDOMElement: HTMLElement | null;
+  let isMounted: boolean = false;
+  let rootVNode: VNode | null = null;
 
-type Reducer = (state: State, actionPayload?: ActionPayload) => State;
-type Reducers = Record<ActionName, Reducer>;
-
-type Emit = (actionName: ActionName, actionPayload?: ActionPayload) => void;
-
-function createApp({
-  state,
-  view,
-  reducers = {},
-}: {
-  state: State;
-  view: View;
-  reducers: Reducers;
-}) {
-  let parentElement: HTMLElement | null = null;
-  let vDOMRootNode: VNode | null = null;
-
-  const dispatcher = new Dispatcher();
-  const subscriptions = [dispatcher.afterEveryCommand(renderApp)];
-
-  function emit(actionName: ActionName, actionPayload?: ActionPayload) {
-    dispatcher.dispatch(actionName, actionPayload);
-  }
-
-  for (const actionName in reducers) {
-    const reducer = reducers[actionName];
-
-    const subs = dispatcher.subscribe(
-      actionName,
-      function reducerWithInjectedState(actionPayload) {
-        state = reducer(state, actionPayload);
-      }
-    );
-    subscriptions.push(subs);
-  }
-
-  function renderApp() {
-    const nextVDOMRootNode = view(state, emit);
-
-    if (vDOMRootNode && parentElement) {
-      vDOMRootNode = patchDOM(vDOMRootNode, nextVDOMRootNode, parentElement);
-    }
+  function reset() {
+    parentDOMElement = null;
+    isMounted = false;
+    rootVNode = null;
   }
 
   return {
-    mount(_parentElement: HTMLElement | null) {
-      parentElement = _parentElement;
-      vDOMRootNode = view(state, emit);
+    mount(_parentDOMElement: HTMLElement) {
+      if (isMounted) {
+        throw new Error("App is already mounted");
+      }
 
-      if (vDOMRootNode && parentElement) {
-        mountDOM(vDOMRootNode, parentElement);
+      parentDOMElement = _parentDOMElement;
+      rootVNode = createElement(RootComponent, props);
+
+      if (parentDOMElement) {
+        mountDOM(rootVNode, parentDOMElement);
       }
+      isMounted = true;
     },
+
     unmount() {
-      if (vDOMRootNode) {
-        destroyDOM(vDOMRootNode);
+      if (!isMounted) {
+        throw new Error("App is not even mounted");
       }
-      vDOMRootNode = null;
-      subscriptions.forEach((unsubscribe) => unsubscribe());
+
+      if (!rootVNode) {
+        throw new Error("There is not even root virtual node");
+      }
+
+      destroyDOM(rootVNode);
+      reset();
     },
   };
 }
 
-export { createApp, type Emit };
+export { createApp };

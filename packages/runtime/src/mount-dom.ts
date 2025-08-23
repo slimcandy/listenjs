@@ -1,8 +1,6 @@
 import { attachEventListeners } from "./events";
 import { setProp } from "./set-prop";
-import {
-  VDOMType
-} from "./types";
+import { VDOMType } from "./types";
 import { extractPropsAndEvents } from "./utils/props";
 
 import type { FiberInstance } from "./fiber";
@@ -13,7 +11,8 @@ import type {
   TextVNode,
   VNode,
   FiberVNode,
-  FiberEventMap} from "./types";
+  FiberEventMap,
+} from "./types";
 
 function mountDOM(
   vNode: VNode,

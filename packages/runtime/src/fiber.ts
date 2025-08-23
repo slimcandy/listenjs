@@ -16,15 +16,13 @@ import type {
 
 type FiberEventListener = Record<FiberEventName, FiberEmitGenerator>;
 
-function createFiber({
-  render,
-  state,
-  methods,
-}: {
+type RegularProps = Record<string, () => void>;
+interface CreateFiberProps extends RegularProps {
   render: () => VNode;
   state: (props?: object) => object;
-  methods: Record<string, () => void>[];
-}) {
+}
+
+function createFiber({ render, state, ...methods }: CreateFiberProps) {
   class Fiber {
     #isMounted = false;
     #vNode: VNode | null;
@@ -111,6 +109,7 @@ function createFiber({
         mountDOM(this.#vNode, hostDOMElement, positionIndex, this);
       }
       this.#wireFiberEventListeners();
+
       this.#domElement = hostDOMElement;
       this.#isMounted = true;
     }
@@ -177,4 +176,4 @@ function createFiber({
 export type FiberClass = ReturnType<typeof createFiber>;
 export type FiberInstance = InstanceType<FiberClass>;
 
-export default createFiber;
+export { createFiber };
