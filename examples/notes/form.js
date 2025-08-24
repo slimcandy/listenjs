@@ -4,20 +4,19 @@ import {
 } from "../../packages/runtime/dist/listenjs.js";
 
 const Form = createComponent({
-  preventSend(event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-    }
-  },
-
   render() {
     const { input, submit, formProps } = this.props;
     const {
       value: inputValue,
       props: { on: events, ...restProps },
     } = input;
-    const { text: submitText = "Сохранить", className: submitClassName } =
-      submit;
+    const {
+      text: submitText = "Сохранить",
+      className: submitClassName,
+      isDisabled = false,
+    } = submit;
+
+    console.log("input restProps", restProps);
 
     return createElement(
       "form",
@@ -28,23 +27,26 @@ const Form = createComponent({
       },
       [
         createElement("fieldset", { role: "group" }, [
-          createElement("input", {
-            name: "note-input",
-            value: inputValue,
-            id: "note-input",
-            placeholder: "Введите текст...",
-            on: {
-              keydown: (event) => this.preventSend(event),
-              ...events,
+          createElement(
+            "textarea",
+            {
+              placeholder: "Введите текст...",
+              on: {
+                ...events,
+              },
+              autocomplete: false,
+              minLength: 3,
+              required: true,
+              ...restProps,
             },
-            ...restProps,
-          }),
+            [inputValue]
+          ),
           createElement(
             "button",
             {
               type: "submit",
               id: "note-submit",
-              disabled: true,
+              disabled: isDisabled,
               className: submitClassName,
             },
             [submitText]
@@ -57,22 +59,27 @@ const Form = createComponent({
 
 const MainForm = createComponent({
   state() {
-    return { text: "" };
+    return { text: "", isInputValid: false };
   },
 
   changeText(event) {
-    const { key, target } = event;
-    this.setState({ text: target.value });
+    const { target } = event;
 
-    if (key === "Enter") {
-      event.preventDefault();
+    let isInputValid = false;
+    const nextText = target.value;
+
+    if (nextText.length > 3) {
+      isInputValid = true;
     }
+
+    this.setState({ text: nextText, isInputValid });
   },
 
   saveText(event) {
     event.preventDefault();
-    if (this.state.text.length > 3) {
+    if (this.state.isInputValid) {
       this.emit("add", this.state.text);
+      this.setState({ text: "", isInputValid: false });
     }
   },
 
@@ -94,6 +101,7 @@ const MainForm = createComponent({
       },
       submit: {
         text: "Сохранить",
+        isDisabled: !this.state.isInputValid,
       },
     });
   },
@@ -101,17 +109,22 @@ const MainForm = createComponent({
 
 const EditForm = createComponent({
   state(props) {
-    return { text: props.note.text };
+    return { text: props.note.text, isInputValid: props.note.text.length > 3 };
   },
 
   changeText(event) {
     const { target } = event;
-    this.setState({ text: target.value });
+    const nextText = target.value;
+
+    this.setState({
+      text: nextText,
+      isInputValid: nextText.length > 3,
+    });
   },
 
   saveText(event) {
     event.preventDefault();
-    if (this.state.text.length > 3) {
+    if (this.state.isInputValid) {
       this.emit("edit", {
         text: this.state.text,
         index: this.props.note.index,
@@ -120,22 +133,26 @@ const EditForm = createComponent({
   },
 
   render() {
-    return createElement("div", {}, [
+    return createElement("article", {}, [
       createElement("details", { name: "note" }, [
-        createElement("summary", {}, [this.state.text.slice(0, 70) + "…"]),
+        createElement("summary", {}, [
+          createElement("blockquote", {}, [this.state.text]),
+        ]),
         createElement(Form, {
           ...this.props,
           input: {
             value: this.state.text,
             props: {
               on: {
-                change: (event) => this.changeText(event),
+                input: (event) => this.changeText(event),
               },
+              ariaInvalid: !this.state.isInputValid,
             },
           },
           submit: {
             text: "Изменить",
             className: "secondary",
+            isDisabled: !this.state.isInputValid,
           },
           formProps: {
             on: {
@@ -144,8 +161,6 @@ const EditForm = createComponent({
           },
         }),
       ]),
-
-      createElement("hr"),
     ]);
   },
 });

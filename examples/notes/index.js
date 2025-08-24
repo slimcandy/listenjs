@@ -10,25 +10,35 @@ import { EditForm, MainForm } from "./form.js";
 const App = createComponent({
   state() {
     return {
-      notes: notes,
+      notes: notes.map(function addUniqueKey(noteText, index) {
+        return {
+          id: Date.now() + index,
+          text: noteText,
+        };
+      }),
     };
   },
 
   addNote(text) {
-    const newNotes = [text, ...this.state.notes];
+    const newNote = { id: Date.now(), text: text };
+    const newNotes = [newNote, ...this.state.notes];
     this.setState({ notes: newNotes });
   },
   editNote({ index, text }) {
-    const notes = [...this.state.notes];
-    notes[index] = text;
+    const newNotes = this.state.notes.map((note, currentIndex) => {
+      if (currentIndex === index) {
+        return { ...note, text: text };
+      }
+      return note;
+    });
 
-    this.setState({ notes: notes });
+    this.setState({ notes: newNotes });
   },
 
   render() {
     const { notes } = this.state;
 
-    return createElement("main", { className: "container" }, [
+    return createElement("main", { class: "container" }, [
       createElement("h1", {}, ["Мои заметки"]),
 
       createElement(MainForm, {
@@ -40,13 +50,13 @@ const App = createComponent({
       createElement("hr"),
 
       createElement(
-        "div",
+        "section",
         { id: "note-list" },
         notes.map((note, index) =>
           createElement(EditForm, {
-            key: note,
+            key: note.id,
             note: {
-              text: note,
+              text: note.text,
               index: index,
             },
             on: {

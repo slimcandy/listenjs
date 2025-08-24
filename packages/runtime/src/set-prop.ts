@@ -16,9 +16,7 @@ function setProp(domElement: HTMLElement, props: DOMProps | FiberProps) {
   }
 
   for (const [key, value] of Object.entries(restAttrs)) {
-    if (typeof value === "string") {
-      setValueForAttribute(domElement, key, value);
-    }
+    setValueForAttribute(domElement, key, value);
   }
 }
 
@@ -51,8 +49,10 @@ function setValueForAttribute(
     removeValueForAttribute(domElement, key);
   } else if (key.startsWith("data-")) {
     domElement.setAttribute(key, String(value));
-  } else {
+  } else if (typeof value === "boolean") {
     domElement[key] = value;
+  } else {
+    domElement.setAttribute(key, String(value));
   }
 }
 
