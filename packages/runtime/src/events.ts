@@ -1,4 +1,4 @@
-import type { FiberInstance } from "./fiber";
+import type { ComponentInstance } from "./fiber";
 import type { DomEventMap, DOMEventName, DOMEmitGenerator } from "./types";
 
 type DOMEventWithContext = (event: Event) => void;
@@ -8,7 +8,7 @@ function attachEventListener(
   domEventName: DOMEventName,
   emitGenerator: DOMEmitGenerator,
   domElement: HTMLElement,
-  parentFiberInstance: FiberInstance | null = null
+  parentFiberInstance: ComponentInstance | null = null
 ) {
   function boundContextToDOMEvent(...args: [Event]) {
     if (parentFiberInstance) {
@@ -26,7 +26,7 @@ function attachEventListener(
 function attachEventListeners(
   domEventMap: DomEventMap = {},
   domElement: HTMLElement,
-  parentFiberInstance: FiberInstance | null = null
+  parentFiberInstance: ComponentInstance | null = null
 ): DOMEventListener {
   const attachedDOMEventListeners: DOMEventListener = {};
 

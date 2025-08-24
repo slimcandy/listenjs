@@ -1,9 +1,9 @@
 import {
   createElement,
-  createFiber,
+  createComponent,
 } from "../../packages/runtime/dist/listenjs.js";
 
-const Form = createFiber({
+const Form = createComponent({
   preventSend(event) {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -55,14 +55,14 @@ const Form = createFiber({
   },
 });
 
-const MainForm = createFiber({
+const MainForm = createComponent({
   state() {
     return { text: "" };
   },
 
   changeText(event) {
     const { key, target } = event;
-    this.updateState({ text: target.value });
+    this.setState({ text: target.value });
 
     if (key === "Enter") {
       event.preventDefault();
@@ -99,14 +99,14 @@ const MainForm = createFiber({
   },
 });
 
-const EditForm = createFiber({
+const EditForm = createComponent({
   state(props) {
     return { text: props.note.text };
   },
 
   changeText(event) {
     const { target } = event;
-    this.updateState({ text: target.value });
+    this.setState({ text: target.value });
   },
 
   saveText(event) {

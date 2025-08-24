@@ -1,10 +1,15 @@
 import { removeEventListeners } from "./events";
-import { enqueueJob } from "./sheduler";
+import { enqueueJob } from "./scheduler";
 import { VDOMType } from "./types";
 
-import type { ElementVNode, FragmentVNode, TextVNode, VNode } from "./types";
+import type {
+  ElementVNode,
+  FragmentVNode,
+  TextVNode,
+  ReactElement,
+} from "./types";
 
-function destroyDOM(vNode: VNode) {
+function destroyDOM(vNode: ReactElement) {
   const { type } = vNode;
 
   switch (type) {
@@ -20,9 +25,9 @@ function destroyDOM(vNode: VNode) {
       removeFragmentNodes(vNode);
       break;
     }
-    case VDOMType.FIBER: {
+    case VDOMType.COMPONENT: {
       vNode.fiberInstance.unmount();
-      enqueueJob(() => vNode.fiberInstance.onUnmounted());
+      enqueueJob(() => vNode.fiberInstance.componentWillUnmount());
       break;
     }
 

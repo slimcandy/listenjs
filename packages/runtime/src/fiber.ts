@@ -11,7 +11,7 @@ import type {
   FiberEventMap,
   FiberEventName,
   FiberProps,
-  VNode,
+  ReactElement,
 } from "./types";
 
 function voidFunction() {}
@@ -19,26 +19,26 @@ function voidFunction() {}
 type FiberEventListener = Record<FiberEventName, FiberEmitGenerator>;
 
 type RegularProps = Record<string, VoidFunction>;
-interface CreateFiberProps extends RegularProps {
-  render: () => VNode;
+interface CreateComponentProps extends RegularProps {
+  render: () => ReactElement;
   state: (props?: object) => object;
-  onMounted: VoidFunction;
-  onUnmounted: VoidFunction;
+  componentDidMount: VoidFunction;
+  componentWillUnmount: VoidFunction;
 }
 
-function createFiber({
+function createComponent({
   render,
   state,
-  onMounted = voidFunction,
-  onUnmounted = voidFunction,
+  componentDidMount = voidFunction,
+  componentWillUnmount = voidFunction,
   ...methods
-}: CreateFiberProps) {
-  class Fiber implements FiberInstance {
+}: CreateComponentProps) {
+  class Fiber implements ComponentInstance {
     #isMounted = false;
-    #vNode: VNode | null;
+    #vNode: ReactElement | null;
     #domElement: HTMLElement | null;
     #fiberListeners: FiberEventListener;
-    #parentFiberInstance: FiberInstance | null;
+    #parentFiberInstance: ComponentInstance | null;
     #dispatcher = new Dispatcher();
     #unSubscriptions: Array<UnsubscribeFunction>;
 
@@ -48,7 +48,7 @@ function createFiber({
     constructor(
       props: FiberProps = {},
       fiberEventMap: FiberEventMap = {},
-      parentFiberInstance: FiberInstance | null = null
+      parentFiberInstance: ComponentInstance | null = null
     ) {
       this.props = props;
       this.state = state ? state(props) : {};
@@ -63,7 +63,7 @@ function createFiber({
 
       if (this.#vNode.type === VDOMType.FRAGMENT) {
         return extractChildren(this.#vNode).flatMap((child) => {
-          if (child.type === VDOMType.FIBER) {
+          if (child.type === VDOMType.COMPONENT) {
             return child.fiberInstance.domElements;
           }
           return child.domElement ? [child.domElement] : [];
@@ -104,17 +104,17 @@ function createFiber({
       this.#patch();
     }
 
-    updateState(state: object) {
+    setState(state: object) {
       this.state = { ...this.state, ...state };
       this.#patch();
     }
 
-    onMounted() {
-      return Promise.resolve<VoidFunction>(onMounted.call(this));
+    componentDidMount() {
+      return Promise.resolve<VoidFunction>(componentDidMount.call(this));
     }
 
-    onUnmounted() {
-      return Promise.resolve<VoidFunction>(onUnmounted.call(this));
+    componentWillUnmount() {
+      return Promise.resolve<VoidFunction>(componentWillUnmount.call(this));
     }
 
     mount(hostDOMElement: HTMLElement, positionIndex: number | null = null) {
@@ -191,23 +191,22 @@ function createFiber({
   return Fiber;
 }
 
-export type FiberClass = ReturnType<typeof createFiber>;
-export interface FiberInstance {
+type ClassComponent = ReturnType<typeof createComponent>;
+interface ComponentInstance {
   props: object;
   state: object;
   domElements: (HTMLElement | Text)[];
   firstDOMElement: HTMLElement | Text | undefined;
-  // остановился тут. Надо смотреть какой тип был раньше, что всё проходило и с текстом, и с элементом
   offset: number;
 
-  render(): VNode;
+  render(): ReactElement;
   emit(fiberEventName: FiberEventName, actionPayload?: ActionPayload): void;
   updateProps(props: object): void;
-  updateState(state: object): void;
-  onMounted: () => Promise<VoidFunction>;
-  onUnmounted: () => Promise<VoidFunction>;
+  setState(state: object): void;
+  componentDidMount: () => Promise<VoidFunction>;
+  componentWillUnmount: () => Promise<VoidFunction>;
   mount(hostDOMElement: HTMLElement, positionIndex?: number | null): void;
   unmount(): void;
 }
 
-export { createFiber };
+export { createComponent, type ClassComponent, type ComponentInstance };

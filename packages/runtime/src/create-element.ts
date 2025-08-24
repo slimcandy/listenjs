@@ -1,20 +1,19 @@
-import {
-  VDOMType
-} from "./types";
+import { VDOMType } from "./types";
 import { withoutNulls } from "./utils/arrays";
 
-import type { FiberClass } from "./fiber";
+import type { ClassComponent } from "./fiber";
 import type {
   ElementVNode,
-  VNode,
+  ReactElement,
   VNodeChild,
   TextVNode,
   FiberVNode,
   DOMProps,
-  FiberProps} from "./types";
+  FiberProps,
+} from "./types";
 
 function createElement(
-  tag: string | FiberClass,
+  tag: string | ClassComponent,
   props: DOMProps | FiberProps = {},
   children: VNodeChild[] = []
 ): ElementVNode | FiberVNode {
@@ -27,7 +26,7 @@ function createElement(
     } as ElementVNode;
   } else {
     return {
-      type: VDOMType.FIBER,
+      type: VDOMType.COMPONENT,
       tag,
       props,
       children: mapTextNodes(withoutNulls(children)),
@@ -35,7 +34,7 @@ function createElement(
   }
 }
 
-function mapTextNodes(children: VNodeChild[]): VNode[] {
+function mapTextNodes(children: VNodeChild[]): ReactElement[] {
   return children.map((child) =>
     typeof child === "string" ? createTextElement(child) : child
   );

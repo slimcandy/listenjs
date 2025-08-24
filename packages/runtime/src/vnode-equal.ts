@@ -1,8 +1,8 @@
 import { VDOMType } from "./types";
 
-import type { VNode } from "./types";
+import type { ReactElement } from "./types";
 
-function areVNodesEqual(vNodeA: VNode, vNodeB: VNode) {
+function areVNodesEqual(vNodeA: ReactElement, vNodeB: ReactElement) {
   if (
     vNodeA.type === vNodeB.type &&
     vNodeA.type === VDOMType.ELEMENT &&
@@ -22,8 +22,8 @@ function areVNodesEqual(vNodeA: VNode, vNodeB: VNode) {
 
   if (
     vNodeA.type === vNodeB.type &&
-    vNodeA.type === VDOMType.FIBER &&
-    vNodeB.type === VDOMType.FIBER
+    vNodeA.type === VDOMType.COMPONENT &&
+    vNodeB.type === VDOMType.COMPONENT
   ) {
     const {
       tag: tagA,

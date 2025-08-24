@@ -2,16 +2,16 @@ import { createElement } from "./create-element";
 import { destroyDOM } from "./destroy-dom";
 import { mountDOM } from "./mount-dom";
 
-import type { FiberClass } from "./fiber";
-import type { DOMProps, FiberProps, VNode } from "./types";
+import type { ClassComponent } from "./fiber";
+import type { DOMProps, FiberProps, ReactElement } from "./types";
 
 function createApp(
-  RootComponent: string | FiberClass,
+  RootComponent: string | ClassComponent,
   props: DOMProps | FiberProps = {}
 ) {
   let parentDOMElement: HTMLElement | null;
   let isMounted: boolean = false;
-  let rootVNode: VNode | null = null;
+  let rootVNode: ReactElement | null = null;
 
   function reset() {
     parentDOMElement = null;

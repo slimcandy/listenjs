@@ -1,13 +1,13 @@
 import {
   createApp,
   createElement,
-  createFiber,
+  createComponent,
 } from "../../packages/runtime/dist/listenjs.js";
 
 import { notes } from "../../../../examples/notes/note-db.js";
 import { EditForm, MainForm } from "./form.js";
 
-const App = createFiber({
+const App = createComponent({
   state() {
     return {
       notes: notes,
@@ -16,13 +16,13 @@ const App = createFiber({
 
   addNote(text) {
     const newNotes = [text, ...this.state.notes];
-    this.updateState({ notes: newNotes });
+    this.setState({ notes: newNotes });
   },
   editNote({ index, text }) {
     const notes = [...this.state.notes];
     notes[index] = text;
 
-    this.updateState({ notes: notes });
+    this.setState({ notes: notes });
   },
 
   render() {

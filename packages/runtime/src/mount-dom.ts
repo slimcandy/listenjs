@@ -1,25 +1,25 @@
 import { attachEventListeners } from "./events";
+import { enqueueJob } from "./scheduler";
 import { setProp } from "./set-prop";
-import { enqueueJob } from "./sheduler";
 import { VDOMType } from "./types";
 import { extractPropsAndEvents } from "./utils/props";
 
-import type { FiberInstance } from "./fiber";
+import type { ComponentInstance } from "./fiber";
 import type {
   DomElement,
   ElementVNode,
   FragmentVNode,
   TextVNode,
-  VNode,
+  ReactElement,
   FiberVNode,
   FiberEventMap,
 } from "./types";
 
 function mountDOM(
-  vNode: VNode,
+  vNode: ReactElement,
   parentDOMElement: HTMLElement,
   positionIndex: number | null = null,
-  parentFiberInstance: FiberInstance | null = null
+  parentFiberInstance: ComponentInstance | null = null
 ) {
   if (parentDOMElement == undefined) {
     throw new Error(`
@@ -46,14 +46,14 @@ function mountDOM(
         parentFiberInstance
       );
       break;
-    case VDOMType.FIBER:
+    case VDOMType.COMPONENT:
       createDOMElementFromFiberNode(
         vNode,
         parentDOMElement,
         positionIndex,
         parentFiberInstance
       );
-      enqueueJob(() => vNode.fiberInstance.onMounted());
+      enqueueJob(() => vNode.fiberInstance.componentDidMount());
       break;
     default:
       throw new Error(`Unknown vNode type`);
@@ -76,7 +76,7 @@ function createDOMElementFromFragmentNode(
   vNode: FragmentVNode,
   parentDOMElement: HTMLElement,
   positionIndex: number | null,
-  parentFiberInstance: FiberInstance | null = null
+  parentFiberInstance: ComponentInstance | null = null
 ) {
   const { children } = vNode;
   vNode.domElement = parentDOMElement;
@@ -95,7 +95,7 @@ function createDOMElementFromElementNode(
   vNode: ElementVNode,
   parentDOMElement: HTMLElement,
   positionIndex: number | null,
-  parentFiberInstance: FiberInstance | null = null
+  parentFiberInstance: ComponentInstance | null = null
 ) {
   const { tag, children } = vNode;
 
@@ -114,11 +114,11 @@ function createDOMElementFromFiberNode(
   vNode: FiberVNode,
   parentDOMElement: HTMLElement,
   positionIndex: number | null,
-  parentFiberInstance: FiberInstance | null = null
+  parentFiberInstance: ComponentInstance | null = null
 ) {
-  const FiberClass = vNode.tag;
+  const ClassComponent = vNode.tag;
   const { eventMap: fiberEventMap, props } = extractPropsAndEvents(vNode);
-  const fiberInstance = new FiberClass(
+  const fiberInstance = new ClassComponent(
     props,
     fiberEventMap as FiberEventMap,
     parentFiberInstance
@@ -132,7 +132,7 @@ function createDOMElementFromFiberNode(
 function setInitialProperties(
   domElement: HTMLElement,
   vNode: ElementVNode,
-  parentFiberInstance: FiberInstance | null
+  parentFiberInstance: ComponentInstance | null
 ) {
   const { eventMap, props } = extractPropsAndEvents(vNode);
 
@@ -170,9 +170,9 @@ function insertIntoDOM(
   }
 }
 
-function extractChildren(vNode: VNode) {
+function extractChildren(vNode: ReactElement) {
   if ("children" in vNode) {
-    const children: VNode[] = [];
+    const children: ReactElement[] = [];
 
     for (const child of vNode.children) {
       if (child.type === VDOMType.FRAGMENT) {

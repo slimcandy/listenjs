@@ -1,12 +1,12 @@
 import type { ActionName, ActionPayload } from "./dispatcher";
 import type { DOMEventListener } from "./events";
-import type { FiberClass, FiberInstance } from "./fiber";
+import type { ClassComponent, ComponentInstance } from "./fiber";
 
 enum VDOMType {
   TEXT = Node.TEXT_NODE,
   ELEMENT = Node.ELEMENT_NODE,
   FRAGMENT = Node.DOCUMENT_FRAGMENT_NODE,
-  FIBER = "FIBER",
+  COMPONENT = "COMPONENT",
 }
 
 enum ARRAY_DIFF_OP {
@@ -54,15 +54,15 @@ interface TextVNode {
 }
 
 interface BaseNode {
-  children: VNode[];
+  children: ReactElement[];
   listeners?: DOMEventListener;
 }
 
 interface FiberVNode extends BaseNode {
   props: FiberProps;
-  type: VDOMType.FIBER;
-  tag: FiberClass;
-  fiberInstance: FiberInstance;
+  type: VDOMType.COMPONENT;
+  tag: ClassComponent;
+  fiberInstance: ComponentInstance;
   domElement?: Text | HTMLElement;
 }
 
@@ -75,16 +75,16 @@ interface ElementVNode extends BaseNode {
 
 interface FragmentVNode {
   type: VDOMType.FRAGMENT;
-  children: VNode[];
+  children: ReactElement[];
   domElement?: HTMLElement;
 }
 
-type VNode = TextVNode | ElementVNode | FiberVNode | FragmentVNode;
-type VNodeChild = string | VNode; // Acceptable child types
+type ReactElement = TextVNode | ElementVNode | FiberVNode | FragmentVNode;
+type VNodeChild = string | ReactElement; // Acceptable child types
 type DomElement = Text | HTMLElement;
 
 type State = Record<string, string | number | object>;
-type View = (state: State, emit: Emit) => VNode;
+type View = (state: State, emit: Emit) => ReactElement;
 
 type Reducer = (state: State, actionPayload?: ActionPayload) => State;
 type Reducers = Record<ActionName, Reducer>;
@@ -96,7 +96,7 @@ export {
   ARRAY_DIFF_OP,
   type ElementVNode,
   type FiberVNode,
-  type VNode,
+  type ReactElement,
   type VNodeChild,
   type FragmentVNode,
   type Attributes,
