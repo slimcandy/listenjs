@@ -14,7 +14,6 @@ import type {
   VNode,
 } from "./types";
 
-type VoidFunction = () => void;
 function voidFunction() {}
 
 type FiberEventListener = Record<FiberEventName, FiberEmitGenerator>;

@@ -1,5 +1,6 @@
 import { attachEventListeners } from "./events";
 import { setProp } from "./set-prop";
+import { enqueueJob } from "./sheduler";
 import { VDOMType } from "./types";
 import { extractPropsAndEvents } from "./utils/props";
 
@@ -52,6 +53,7 @@ function mountDOM(
         positionIndex,
         parentFiberInstance
       );
+      enqueueJob(() => vNode.fiberInstance.onMounted());
       break;
     default:
       throw new Error(`Unknown vNode type`);

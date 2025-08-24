@@ -1,13 +1,8 @@
 import { removeEventListeners } from "./events";
-import {
-  VDOMType
-} from "./types";
+import { enqueueJob } from "./sheduler";
+import { VDOMType } from "./types";
 
-import type {
-  ElementVNode,
-  FragmentVNode,
-  TextVNode,
-  VNode} from "./types";
+import type { ElementVNode, FragmentVNode, TextVNode, VNode } from "./types";
 
 function destroyDOM(vNode: VNode) {
   const { type } = vNode;
@@ -27,6 +22,7 @@ function destroyDOM(vNode: VNode) {
     }
     case VDOMType.FIBER: {
       vNode.fiberInstance.unmount();
+      enqueueJob(() => vNode.fiberInstance.onUnmounted());
       break;
     }
 
@@ -48,7 +44,9 @@ function removeTextNode(vNode: TextVNode) {
 function removeElementNode(vNode: ElementVNode) {
   const { domElement, children, listeners } = vNode;
 
-  if (!domElement) {return;}
+  if (!domElement) {
+    return;
+  }
 
   domElement.remove();
   children.forEach(destroyDOM);
