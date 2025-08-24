@@ -280,27 +280,48 @@ function patchChildren(
         break;
       }
       case ARRAY_DIFF_OP.MOVE: {
-        if (parentDomElement instanceof HTMLElement) {
-          if ("originalIndex" in operation) {
-            const oldChild = oldChildren[operation.originalIndex + offset];
-            const newChild = newChildren[index];
+        if (
+          parentDomElement instanceof HTMLElement &&
+          "originalIndex" in operation
+        ) {
+          const oldChild = oldChildren[operation.originalIndex + offset];
+          const newChild = newChildren[index];
 
-            if (!oldChild.domElement) {
-              throw new Error(
-                `Cannot find DOM Element for old vNode: ${oldVNode}`
-              );
-            }
+          // if (!oldChild.domElement) {
+          //   throw new Error(
+          //     `Cannot find DOM Element for old vNode: ${oldVNode}`
+          //   );
+          // }
 
-            const domElement = oldChild.domElement;
-            const domElementAtTargetPosition =
-              parentDomElement.childNodes[index];
+          // const domElement = oldChild.domElement;
+          // const domElementAtTargetPosition = parentDomElement.childNodes[index];
 
+          // parentDomElement.insertBefore(domElement, domElementAtTargetPosition);
+          // patchDOM(oldChild, newChild, parentDomElement, parentFiber);
+
+          const elementsToMove =
+            oldChild.type === VDOMType.COMPONENT
+              ? oldChild.fiberInstance.domElements
+              : oldChild.domElement
+              ? [oldChild.domElement]
+              : [];
+
+          if (elementsToMove.length === 0) {
+            throw new Error(
+              `Cannot find DOM Element(s) for old vNode to move: ${JSON.stringify(
+                oldChild
+              )}`
+            );
+          }
+
+          const domElementAtTargetPosition = parentDomElement.childNodes[index];
+          elementsToMove.forEach((domElement) => {
             parentDomElement.insertBefore(
               domElement,
               domElementAtTargetPosition
             );
-            patchDOM(oldChild, newChild, parentDomElement, parentFiber);
-          }
+          });
+          patchDOM(oldChild, newChild, parentDomElement, parentFiber);
         }
         break;
       }
