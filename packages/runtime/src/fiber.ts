@@ -14,21 +14,32 @@ import type {
   VNode,
 } from "./types";
 
+type VoidFunction = () => void;
+function voidFunction() {}
+
 type FiberEventListener = Record<FiberEventName, FiberEmitGenerator>;
 
-type RegularProps = Record<string, () => void>;
+type RegularProps = Record<string, VoidFunction>;
 interface CreateFiberProps extends RegularProps {
   render: () => VNode;
   state: (props?: object) => object;
+  onMounted: VoidFunction;
+  onUnmounted: VoidFunction;
 }
 
-function createFiber({ render, state, ...methods }: CreateFiberProps) {
-  class Fiber {
+function createFiber({
+  render,
+  state,
+  onMounted = voidFunction,
+  onUnmounted = voidFunction,
+  ...methods
+}: CreateFiberProps) {
+  class Fiber implements FiberInstance {
     #isMounted = false;
     #vNode: VNode | null;
     #domElement: HTMLElement | null;
     #fiberListeners: FiberEventListener;
-    #parentFiberInstance: unknown; // Changed to unknown to break circularity
+    #parentFiberInstance: FiberInstance | null;
     #dispatcher = new Dispatcher();
     #unSubscriptions: Array<UnsubscribeFunction>;
 
@@ -38,7 +49,7 @@ function createFiber({ render, state, ...methods }: CreateFiberProps) {
     constructor(
       props: FiberProps = {},
       fiberEventMap: FiberEventMap = {},
-      parentFiberInstance: unknown = null // Changed to unknown to break circularity
+      parentFiberInstance: FiberInstance | null = null
     ) {
       this.props = props;
       this.state = state ? state(props) : {};
@@ -97,6 +108,14 @@ function createFiber({ render, state, ...methods }: CreateFiberProps) {
     updateState(state: object) {
       this.state = { ...this.state, ...state };
       this.#patch();
+    }
+
+    onMounted() {
+      return Promise.resolve<VoidFunction>(onMounted.call(this));
+    }
+
+    onUnmounted() {
+      return Promise.resolve<VoidFunction>(onUnmounted.call(this));
     }
 
     mount(hostDOMElement: HTMLElement, positionIndex: number | null = null) {
@@ -174,6 +193,22 @@ function createFiber({ render, state, ...methods }: CreateFiberProps) {
 }
 
 export type FiberClass = ReturnType<typeof createFiber>;
-export type FiberInstance = InstanceType<FiberClass>;
+export interface FiberInstance {
+  props: object;
+  state: object;
+  domElements: (HTMLElement | Text)[];
+  firstDOMElement: HTMLElement | Text | undefined;
+  // остановился тут. Надо смотреть какой тип был раньше, что всё проходило и с текстом, и с элементом
+  offset: number;
+
+  render(): VNode;
+  emit(fiberEventName: FiberEventName, actionPayload?: ActionPayload): void;
+  updateProps(props: object): void;
+  updateState(state: object): void;
+  onMounted: () => Promise<VoidFunction>;
+  onUnmounted: () => Promise<VoidFunction>;
+  mount(hostDOMElement: HTMLElement, positionIndex?: number | null): void;
+  unmount(): void;
+}
 
 export { createFiber };

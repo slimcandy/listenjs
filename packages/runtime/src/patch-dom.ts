@@ -7,10 +7,7 @@ import {
   setStyle,
   setValueForAttribute,
 } from "./set-prop";
-import {
-  ARRAY_DIFF_OP,
-  VDOMType
-} from "./types";
+import { ARRAY_DIFF_OP, VDOMType } from "./types";
 import { arraysDiff, arraysDiffSequence } from "./utils/arrays";
 import { objectsDiff } from "./utils/objects";
 import { extractPropsAndEvents } from "./utils/props";
@@ -25,7 +22,8 @@ import type {
   TextVNode,
   VNode,
   FiberVNode,
-  DOMProps} from "./types";
+  DOMProps,
+} from "./types";
 
 function patchDOM(
   oldVNode: VNode,
@@ -111,6 +109,10 @@ function patchElement(
 ) {
   if (!oldVNode.domElement) {
     throw new Error(`Cannot find DOM Element for old vNode: ${oldVNode}`);
+  }
+
+  if (!(oldVNode.domElement instanceof HTMLElement)) {
+    throw new Error("patchElement was called with a non-HTMLElement.");
   }
 
   const domElement: HTMLElement = oldVNode.domElement;

@@ -55,7 +55,6 @@ interface TextVNode {
 
 interface BaseNode {
   children: VNode[];
-  domElement?: HTMLElement;
   listeners?: DOMEventListener;
 }
 
@@ -64,18 +63,20 @@ interface FiberVNode extends BaseNode {
   type: VDOMType.FIBER;
   tag: FiberClass;
   fiberInstance: FiberInstance;
+  domElement?: Text | HTMLElement;
 }
 
 interface ElementVNode extends BaseNode {
   props: DOMProps;
   type: VDOMType.ELEMENT;
   tag: string;
+  domElement?: HTMLElement;
 }
 
 interface FragmentVNode {
   type: VDOMType.FRAGMENT;
   children: VNode[];
-  domElement?: HTMLElement; // Parent node for fragment
+  domElement?: HTMLElement;
 }
 
 type VNode = TextVNode | ElementVNode | FiberVNode | FragmentVNode;
