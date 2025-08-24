@@ -1,7 +1,7 @@
-import cleanup from "rollup-plugin-cleanup";
-import filesize from "rollup-plugin-filesize";
 import terser from "@rollup/plugin-terser";
 import typescript from "@rollup/plugin-typescript";
+import cleanup from "rollup-plugin-cleanup";
+import filesize from "rollup-plugin-filesize";
 
 export default {
   input: "src/index.ts",
@@ -14,7 +14,7 @@ export default {
   ],
   output: [
     {
-      file: "dist/listenjs.js",
+      file: "dist/fe-fwk-ts-react.js",
       format: "esm",
       sourcemap: true,
       plugins: [terser(), filesize()],

@@ -1,9 +1,9 @@
 {
-  "name": "listenjs",
+  "name": "fe-fwk-ts-react",
   "version": "1.0.0",
-  "main": "dist/listenjs.js",
+  "main": "dist/fe-fwk-ts-react.js",
   "files": [
-    "dist/listenjs.js"
+    "dist/fe-fwk-ts-react.js"
   ],
   "scripts": {
     "prepack": "npm run build",

@@ -2,7 +2,7 @@ import {
   createApp,
   createElement,
   createComponent,
-} from "../../packages/runtime/dist/listenjs.js";
+} from "../../packages/runtime/dist/fe-fwk-ts-react.js";
 
 import { notes } from "../../../../examples/notes/note-db.js";
 import { EditForm, MainForm } from "./form.js";

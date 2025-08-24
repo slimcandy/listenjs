@@ -1,7 +1,7 @@
 import {
   createElement,
   createComponent,
-} from "../../packages/runtime/dist/listenjs.js";
+} from "../../packages/runtime/dist/fe-fwk-ts-react.js";
 
 const Form = createComponent({
   render() {
@@ -15,8 +15,6 @@ const Form = createComponent({
       className: submitClassName,
       isDisabled = false,
     } = submit;
-
-    console.log("input restProps", restProps);
 
     return createElement(
       "form",
