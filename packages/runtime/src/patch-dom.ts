@@ -287,18 +287,6 @@ function patchChildren(
           const oldChild = oldChildren[operation.originalIndex + offset];
           const newChild = newChildren[index];
 
-          // if (!oldChild.domElement) {
-          //   throw new Error(
-          //     `Cannot find DOM Element for old vNode: ${oldVNode}`
-          //   );
-          // }
-
-          // const domElement = oldChild.domElement;
-          // const domElementAtTargetPosition = parentDomElement.childNodes[index];
-
-          // parentDomElement.insertBefore(domElement, domElementAtTargetPosition);
-          // patchDOM(oldChild, newChild, parentDomElement, parentFiber);
-
           const elementsToMove =
             oldChild.type === VDOMType.COMPONENT
               ? oldChild.fiberInstance.domElements
