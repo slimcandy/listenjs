@@ -125,7 +125,7 @@ const EditForm = createComponent({
     if (this.state.isInputValid) {
       this.emit("edit", {
         text: this.state.text,
-        index: this.props.note.index,
+        id: this.props.note.id,
       });
     }
   },

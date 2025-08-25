@@ -24,9 +24,9 @@ const App = createComponent({
     const newNotes = [newNote, ...this.state.notes];
     this.setState({ notes: newNotes });
   },
-  editNote({ index, text }) {
-    const newNotes = this.state.notes.map((note, currentIndex) => {
-      if (currentIndex === index) {
+  editNote({ id, text }) {
+    const newNotes = this.state.notes.map((note) => {
+      if (note.id === id) {
         return { ...note, text: text };
       }
       return note;
@@ -52,13 +52,10 @@ const App = createComponent({
       createElement(
         "section",
         { id: "note-list" },
-        notes.map((note, index) =>
+        notes.map((note) =>
           createElement(EditForm, {
             key: note.id,
-            note: {
-              text: note.text,
-              index: index,
-            },
+            note: note,
             on: {
               edit: this.editNote,
             },
