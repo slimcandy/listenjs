@@ -1,3 +1,5 @@
+import { dequal } from "dequal/lite";
+
 import { destroyDOM } from "./destroy-dom";
 import { Dispatcher } from "./dispatcher";
 import { extractChildren, mountDOM } from "./mount-dom";
@@ -100,12 +102,21 @@ function createComponent({
     }
 
     updateProps(props) {
-      this.props = { ...this.props, ...props };
+      const newProps = { ...this.props, ...props };
+      if (dequal(this.props, newProps)) {
+        return;
+      }
+
+      this.props = newProps;
       this.#patch();
     }
 
     setState(state: object) {
-      this.state = { ...this.state, ...state };
+      const newState = { ...this.state, ...state };
+      if (dequal(this.state, newState)) {
+        return;
+      }
+      this.state = newState;
       this.#patch();
     }
 
